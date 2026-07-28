@@ -1,17 +1,17 @@
 import React from 'react';
 
-const LandAnalysisCard = ({ analysis }) => {
+const LandAnalysisCard = ({ analysis, t }) => {
   if (!analysis) return null;
 
   const { baseline_metrics, ai_scores } = analysis;
 
   const ndviScore = ai_scores?.ndvi?.score || 1.0;
-  const ndviDesc = ai_scores?.ndvi?.description || 'सामान्य फसल स्वास्थ्य';
+  const ndviDesc = ai_scores?.ndvi?.description || 'Normal Vegetation';
 
-  const weatherDesc = ai_scores?.weather?.description || 'अनुकूल मौसम';
+  const weatherDesc = ai_scores?.weather?.description || 'Favorable Weather';
   const weatherScore = ai_scores?.weather?.score || 1.0;
 
-  const soilDesc = ai_scores?.soil?.description || 'उपजाऊ मिट्टी';
+  const soilDesc = ai_scores?.soil?.description || 'Optimal Soil Nutrients';
   const soilScore = ai_scores?.soil?.score || 1.0;
 
   return (
@@ -20,21 +20,25 @@ const LandAnalysisCard = ({ analysis }) => {
         <div className="flex items-center gap-3">
           <span className="text-3xl">🌱</span>
           <div>
-            <h3 className="text-xl font-bold text-[#3D2C1E]">भूमि एवं फसल विश्लेषण</h3>
-            <p className="text-xs text-gray-500">Sentinel-2 व IMD डेटा पर आधारित रिमोट सेंसिंग रिपोर्ट</p>
+            <h3 className="text-xl font-bold text-[#3D2C1E]">
+              {t?.landAnalysisTitle || 'भूमि एवं फसल विश्लेषण'}
+            </h3>
+            <p className="text-xs text-gray-500">
+              {t?.remoteSensingSubtitle || 'Sentinel-2 व IMD डेटा पर आधारित रिमोट सेंसिंग रिपोर्ट'}
+            </p>
           </div>
         </div>
         <span className="px-3 py-1 bg-green-100 text-green-800 font-bold text-xs rounded-full border border-green-200">
-          सक्रिय रिपोर्ट
+          {t?.activeReport || 'सक्रिय रिपोर्ट'}
         </span>
       </div>
 
       {/* Parameter Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* 1. NDVI (Vegetation Index) */}
+        {/* 1. NDVI */}
         <div className="bg-[#FFF8F0] p-4 rounded-xl border border-[#E8630A]/20 flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500">वनस्पति स्वास्थ्य (NDVI)</span>
+            <span className="text-xs font-semibold text-gray-500">{t?.ndviTitle || 'वनस्पति स्वास्थ्य (NDVI)'}</span>
             <span className="text-lg">🌿</span>
           </div>
           <div className="my-2">
@@ -51,51 +55,48 @@ const LandAnalysisCard = ({ analysis }) => {
           <p className="text-xs text-gray-600 font-medium">{ndviDesc}</p>
         </div>
 
-        {/* 2. Weather Condition */}
+        {/* 2. Weather */}
         <div className="bg-[#FFF8F0] p-4 rounded-xl border border-[#E8630A]/20 flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500">मौसम पूर्वानुमान (IMD)</span>
+            <span className="text-xs font-semibold text-gray-500">{t?.weatherTitle || 'मौसम पूर्वानुमान (IMD)'}</span>
             <span className="text-lg">⛅</span>
           </div>
           <div className="my-2">
             <span className="text-xl font-bold text-[#E8630A]">
-              {weatherScore > 1.0 ? 'अनुकूल' : 'मध्यम जोखिम'}
+              {weatherScore > 1.0 ? 'Favorable / अनुकूल' : 'Risk Warning'}
             </span>
           </div>
-          <div className="flex items-center gap-1 text-xs text-gray-600 font-medium">
-            <span>गुणांक: {weatherScore}</span>
-          </div>
-          <p className="text-xs text-gray-600 font-medium mt-1">{weatherDesc}</p>
+          <p className="text-xs text-gray-600 font-medium">{weatherDesc}</p>
         </div>
 
-        {/* 3. Soil Quality */}
+        {/* 3. Soil */}
         <div className="bg-[#FFF8F0] p-4 rounded-xl border border-[#E8630A]/20 flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500">मिट्टी की गुणवत्ता (N-P-K)</span>
+            <span className="text-xs font-semibold text-gray-500">{t?.soilTitle || 'मिट्टी की गुणवत्ता (N-P-K)'}</span>
             <span className="text-lg">🧪</span>
           </div>
           <div className="my-2">
             <span className="text-xl font-bold text-[#3D2C1E]">
-              {soilScore > 1.0 ? 'उत्कृष्ट' : 'सामान्य'}
+              {soilScore > 1.0 ? 'Optimal' : 'Moderate'}
             </span>
           </div>
           <p className="text-xs text-gray-600 font-medium">{soilDesc}</p>
         </div>
 
-        {/* 4. Crop & Baseline Yield */}
+        {/* 4. Baseline Yield */}
         <div className="bg-[#FFF8F0] p-4 rounded-xl border border-[#E8630A]/20 flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500">ऐतिहासिक औसत उपज</span>
+            <span className="text-xs font-semibold text-gray-500">{t?.baselineYieldTitle || 'ऐतिहासिक औसत उपज'}</span>
             <span className="text-lg">🌾</span>
           </div>
           <div className="my-2">
             <span className="text-2xl font-extrabold text-[#E8630A]">
               {baseline_metrics?.historical_yield_tonnes_per_hectare || 0}{' '}
-              <span className="text-xs font-medium text-[#3D2C1E]">टन/हेक्टेयर</span>
+              <span className="text-xs font-medium text-[#3D2C1E]">{t?.perHectare || 'टन/हेक्टेयर'}</span>
             </span>
           </div>
           <p className="text-xs text-gray-600 font-medium">
-            मंडी भाव: ₹{baseline_metrics?.market_price_rs_per_quintal || 0} / क्विंटल
+            {t?.mandiPrice || 'मंडी भाव'}: ₹{baseline_metrics?.market_price_rs_per_quintal || 0} / {t?.perQuintal || 'क्विंटल'}
           </p>
         </div>
       </div>

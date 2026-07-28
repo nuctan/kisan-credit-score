@@ -1,6 +1,6 @@
 import React from 'react';
 
-const FullLandReport = ({ analysisData, formState }) => {
+const FullLandReport = ({ analysisData, formState, t }) => {
   if (!analysisData) return null;
 
   const { baseline_metrics, ai_scores, predictions, one_year_succession_plan } = analysisData;
@@ -20,15 +20,15 @@ const FullLandReport = ({ analysisData, formState }) => {
             <span className="text-3xl">🗓️</span>
             <div>
               <h3 className="text-xl font-extrabold text-[#3D2C1E]">
-                1-वर्षीय ऋण चक्र एवं फसल उत्तराधिकार रिपोर्ट (1-Year Crop Succession Plan)
+                {t?.successionTitle || '1-वर्षीय ऋण चक्र एवं फसल उत्तराधिकार रिपोर्ट (1-Year Succession Plan)'}
               </h3>
               <p className="text-xs text-gray-500">
-                वर्तमान फसल ({formState?.crop}) की कटाई के बाद बचे हुए महीनों का 12-महीने का संपूर्ण आय नियोजन
+                {t?.successionSubtitle || 'वर्तमान फसल की कटाई के बाद बचे हुए महीनों का 12-महीने का संपूर्ण आय नियोजन'}
               </p>
             </div>
           </div>
           <div className="bg-[#2D6A4F] text-white px-4 py-2 rounded-xl text-right">
-            <span className="text-[11px] text-white/80 block">1-वर्षीय कुल संयुक्त आय</span>
+            <span className="text-[11px] text-white/80 block">{t?.total1YearRev || '1-वर्षीय कुल संयुक्त आय'}</span>
             <span className="text-xl font-black">₹{Math.round(totalAnnualRev).toLocaleString('en-IN')}</span>
           </div>
         </div>
@@ -44,13 +44,12 @@ const FullLandReport = ({ analysisData, formState }) => {
                   : 'border-[#2D6A4F]/30 bg-emerald-50/50'
               }`}
             >
-              {/* Badge */}
               <div className="flex justify-between items-start mb-3">
                 <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-white shadow-xs text-gray-700">
                   {c.period}
                 </span>
                 <span className="text-[#2D6A4F] font-bold text-xs">
-                  कटाई: {c.harvest_month}
+                  {t?.harvestMonth || 'कटाई'}: {c.harvest_month}
                 </span>
               </div>
 
@@ -60,7 +59,7 @@ const FullLandReport = ({ analysisData, formState }) => {
               </div>
 
               <div className="pt-3 border-t border-gray-200 mt-4 flex items-center justify-between">
-                <span className="text-xs text-gray-500 font-semibold">अनुमानित आय:</span>
+                <span className="text-xs text-gray-500 font-semibold">{t?.estRevenue || 'अनुमानित आय'}:</span>
                 <span className="text-base font-extrabold text-[#E8630A]">
                   ₹{Math.round(c.estimated_revenue_rs).toLocaleString('en-IN')}
                 </span>
@@ -74,9 +73,9 @@ const FullLandReport = ({ analysisData, formState }) => {
           <span className="text-2xl">🌱</span>
           <div>
             <strong className="font-bold text-[#2D6A4F] text-sm block mb-1">
-              1-वर्षीय ऋण चुकाने की क्षमता का विश्लेषण (1-Year Repayment Logic):
+              {t?.repaymentLogicTitle || '1-वर्षीय ऋण चुकाने की क्षमता का विश्लेषण:'}
             </strong>
-            वर्तमान फसल {formState?.crop} की कटाई के बाद बचे 8 महीनों में भूमि खाली नहीं रहेगी। अनुशंसित ग्रीष्मकालीन मूंग व मानसून धान से कुल ₹{Math.round(totalAnnualRev).toLocaleString('en-IN')} की संयुक्त आय होगी। इसके आधार पर किसान ₹{Math.round(oneYearLoanCap).toLocaleString('en-IN')} तक के 1-वर्षीय बैंक ऋण को आसानी से चुका सकता है।
+            1-Year total annual expected income across 3 crop cycles is ₹{Math.round(totalAnnualRev).toLocaleString('en-IN')}. Safe recommended 1-year loan cap is ₹{Math.round(oneYearLoanCap).toLocaleString('en-IN')}.
           </div>
         </div>
       </div>
@@ -85,20 +84,14 @@ const FullLandReport = ({ analysisData, formState }) => {
       <div className="bg-gradient-to-br from-[#E8630A] to-[#b84a00] rounded-2xl p-6 text-white shadow-2xl flex flex-wrap items-center justify-between gap-6">
         <div className="space-y-1">
           <span className="text-xs font-bold uppercase tracking-wider text-white/80">
-            बैंक स्वीकृति हेतु 1-वर्षीय सुरक्षित ऋण सीमा (1-Year Safe Loan Eligibility)
+            {t?.safeCreditCap || 'बैंक स्वीकृति हेतु 1-वर्षीय सुरक्षित ऋण सीमा (1-Year Safe Loan Eligibility)'}
           </span>
           <h2 className="text-4xl font-black text-white">
             ₹{Math.round(oneYearLoanCap).toLocaleString('en-IN')}
           </h2>
           <p className="text-xs text-white/80">
-            {formState?.state}, {formState?.district} ({areaHectares} हेक्टेयर / {areaBigha} बीघा) के लिए सत्यापित
+            {formState?.state}, {formState?.district} ({areaHectares} Ha / {areaBigha} Bigha)
           </p>
-        </div>
-
-        <div className="bg-white text-[#3D2C1E] p-4 rounded-xl text-center shadow-lg min-w-[200px]">
-          <span className="text-xs font-bold text-gray-500 block">ऋण चुकाने की संभावना</span>
-          <span className="text-xl font-extrabold text-[#2D6A4F] block mt-1">94% (उत्कृष्ट)</span>
-          <span className="text-[10px] text-gray-400">Sentinel-2 व IMD डेटा सत्यापित</span>
         </div>
       </div>
     </div>

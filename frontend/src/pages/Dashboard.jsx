@@ -7,6 +7,7 @@ import FinancialRevenueCard from '../components/FinancialRevenueCard';
 import PDFReportButton from '../components/PDFReportButton';
 import CropRotationPlanner from '../components/CropRotationPlanner';
 import FullLandReport from '../components/FullLandReport';
+import { translations } from '../utils/translations';
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -16,13 +17,12 @@ const SendIcon = () => (
   </svg>
 );
 
-const WELCOME_MESSAGE = {
-  role: 'assistant',
-  content: 'नमस्ते! 🙏 मैं किसानAI हूँ। जब आप अपनी जमीन का चयन करते हैं, तो मैं आपकी वर्तमान फसल के साथ-साथ पूरे 1-वर्षीय ऋण चक्र के लिए अनुशंसित फसल उत्तराधिकार और आय का विश्लेषण प्रस्तुत कर सकता हूँ।'
-};
-
 const Dashboard = () => {
   const navigate = useNavigate();
+
+  // Language State ('hi' for Hindi, 'en' for English)
+  const [lang, setLang] = useState('hi');
+  const t = translations[lang];
 
   // User auth state
   const rawUser = localStorage.getItem('user');
@@ -47,29 +47,42 @@ const Dashboard = () => {
   const [analyzing, setAnalyzing] = useState(false);
 
   // Chat states
-  const [messages, setMessages] = useState([WELCOME_MESSAGE]);
+  const welcomeMessage = {
+    role: 'assistant',
+    content: lang === 'en'
+      ? 'Hello! 🙏 I am KrishiAI. When you select your farmland polygon on the map, I will analyze your crop yield, 1-year loan cycle succession plan, and loan capacity.'
+      : 'नमस्ते! 🙏 मैं किसानAI हूँ। जब आप अपनी जमीन का चयन करते हैं, तो मैं आपकी वर्तमान फसल के साथ-साथ पूरे 1-वर्षीय ऋण चक्र के लिए अनुशंसित फसल उत्तराधिकार और आय का विश्लेषण प्रस्तुत कर सकता हूँ।'
+  };
+
+  const [messages, setMessages] = useState([welcomeMessage]);
   const [input, setInput] = useState('');
   const [loadingChat, setLoadingChat] = useState(false);
   const [chatId, setChatId] = useState(null);
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' or 'chat'
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loadingChat]);
 
+  // Handle Dynamic Area Change from Map Polygon
+  const handleAreaChange = (newHectares) => {
+    setFormState(prev => ({ ...prev, areaHectares: newHectares }));
+  };
+
   // Trigger ML Analysis via Backend & Python Service
-  const handleAnalyzeLand = async (coords = selectedPos) => {
+  const handleAnalyzeLand = async (coords = selectedPos, customArea = formState.areaHectares) => {
     setAnalyzing(true);
     try {
       const token = user?.token || localStorage.getItem('token');
+      const areaToUse = parseFloat(customArea) || parseFloat(formState.areaHectares) || 2.5;
+
       const res = await axios.post(
         `${API_URL}/ai/analyze`,
         {
           state: formState.state,
           district: formState.district,
           crop: formState.crop,
-          area_hectares: parseFloat(formState.areaHectares),
+          area_hectares: areaToUse,
           lat: coords[0],
           lon: coords[1]
         },
@@ -78,14 +91,14 @@ const Dashboard = () => {
 
       setAnalysisData(res.data);
 
-      // Add 1-Year Succession Summary into AI Chat Context
       const pred = res.data.predictions;
-      const weatherText = res.data.ai_scores?.weather?.description || '';
-      const total1YearRev = res.data.predictions?.total_1year_combined_revenue_rs || pred?.adjusted_estimated_revenue_rs * 2.2;
-      const loanCap = res.data.predictions?.suggested_loan_limit_rs;
-      
-      const summaryMsg = `🌾 **1-वर्षीय ऋण व फसल उत्तराधिकार विश्लेषण पूर्ण हुआ!**\n\n1. वर्तमान ${formState.crop} फसल आय: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. 1-वर्षीय कुल संयुक्त आय (3 फसल चक्र): ₹${Math.round(total1YearRev).toLocaleString('en-IN')}\n3. अनुशंसित 1-वर्षीय सुरक्षित ऋण सीमा: ₹${Math.round(loanCap).toLocaleString('en-IN')}\n4. IMD मौसम: ${weatherText}\n\nआपकी गेहूं की कटाई के बाद ग्रीष्मकालीन मूंग व मानसून धान उगाने का सुझाव है। क्या आप इस पर अधिक जानकारी चाहते हैं?`;
-      
+      const total1YearRev = pred?.total_1year_combined_revenue_rs || pred?.adjusted_estimated_revenue_rs * 2.2;
+      const loanCap = pred?.suggested_loan_limit_rs;
+
+      const summaryMsg = lang === 'en'
+        ? `🌾 **Analysis Complete!**\n\n1. Current ${formState.crop} Crop Income: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. Total 1-Year Combined Income (3 Seasons): ₹${Math.round(total1YearRev).toLocaleString('en-IN')}\n3. Recommended 1-Year Loan Cap: ₹${Math.round(loanCap).toLocaleString('en-IN')}\n\nWould you like to discuss loan application details?`
+        : `🌾 **1-वर्षीय ऋण व फसल उत्तराधिकार विश्लेषण पूर्ण हुआ!**\n\n1. वर्तमान ${formState.crop} फसल आय: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. 1-वर्षीय कुल संयुक्त आय (3 फसल चक्र): ₹${Math.round(total1YearRev).toLocaleString('en-IN')}\n3. अनुशंसित 1-वर्षीय सुरक्षित ऋण सीमा: ₹${Math.round(loanCap).toLocaleString('en-IN')}\n\nआपकी गेहूं की कटाई के बाद ग्रीष्मकालीन मूंग व मानसून धान उगाने का सुझाव है। क्या आप इस पर और जानकारी चाहते हैं?`;
+
       setMessages(prev => [...prev, { role: 'assistant', content: summaryMsg }]);
     } catch (err) {
       console.error('Analysis error:', err);
@@ -111,7 +124,8 @@ const Dashboard = () => {
         {
           message: userMessage,
           chatId,
-          landContext: analysisData
+          landContext: analysisData,
+          lang: lang
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -119,7 +133,7 @@ const Dashboard = () => {
       setChatId(res.data.chatId);
       setMessages(prev => [...prev, { role: 'assistant', content: res.data.reply }]);
     } catch (err) {
-      setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ संदेश भेजने में त्रुटि हुई।' }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: lang === 'en' ? '⚠️ Error sending message.' : '⚠️ संदेश भेजने में त्रुटि हुई।' }]);
     } finally {
       setLoadingChat(false);
     }
@@ -133,233 +147,234 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-[#FFF8F0] font-sans flex flex-col">
-      {/* Top Navbar */}
+      {/* Top Navbar with Language Switcher */}
       <header className="bg-white border-b border-[#E8630A]/15 px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm">
         <div className="flex items-center gap-3">
           <span className="text-3xl">🌾</span>
           <div>
             <h1 className="text-2xl font-bold text-[#E8630A]">
-              किसान<span className="text-[#2D6A4F]">AI</span>
+              {t.title}<span className="text-[#2D6A4F]">AI</span>
             </h1>
-            <p className="text-xs text-gray-500 hidden sm:block">Sentinel-2 व 1-वर्षीय ऋण चक्र फसल उत्तराधिकार प्रणाली</p>
+            <p className="text-xs text-gray-500 hidden sm:block">{t.subtitle}</p>
           </div>
         </div>
 
-        {/* Tab Selector */}
-        <div className="flex items-center gap-2 bg-[#FFF8F0] p-1.5 rounded-xl border border-[#E8630A]/20">
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition-all cursor-pointer ${
-              activeTab === 'dashboard'
-                ? 'bg-[#E8630A] text-white shadow-sm'
-                : 'text-[#3D2C1E] hover:bg-white'
-            }`}
-          >
-            📊 डैशबोर्ड व नक्शा
-          </button>
-          <button
-            onClick={() => setActiveTab('chat')}
-            className={`px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'chat'
-                ? 'bg-[#E8630A] text-white shadow-sm'
-                : 'text-[#3D2C1E] hover:bg-white'
-            }`}
-          >
-            💬 AI सहायक
-          </button>
-        </div>
-
-        {/* User Info & Logout */}
+        {/* Language Switcher Toggle */}
         <div className="flex items-center gap-3">
+          <div className="flex items-center bg-[#FFF8F0] p-1 rounded-xl border border-[#E8630A]/30">
+            <button
+              type="button"
+              onClick={() => setLang('hi')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                lang === 'hi' ? 'bg-[#E8630A] text-white shadow-sm' : 'text-gray-600 hover:text-black'
+              }`}
+            >
+              🇮🇳 हिंदी
+            </button>
+            <button
+              type="button"
+              onClick={() => setLang('en')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                lang === 'en' ? 'bg-[#2D6A4F] text-white shadow-sm' : 'text-gray-600 hover:text-black'
+              }`}
+            >
+              🇬🇧 English
+            </button>
+          </div>
+
           <div className="hidden md:flex items-center gap-2 text-sm font-semibold text-[#3D2C1E]">
             <div className="w-8 h-8 rounded-full bg-[#2D6A4F] text-white flex items-center justify-center font-bold">
               {user?.name?.charAt(0)?.toUpperCase() || 'U'}
             </div>
-            <span>{user?.name || 'किसान'}</span>
+            <span>{user?.name || t.farmer}</span>
           </div>
+
           <button
             onClick={handleSignOut}
             className="px-3 py-1.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition cursor-pointer"
           >
-            लॉग आउट
+            {t.logout}
           </button>
         </div>
       </header>
 
-      {/* Main Container */}
+      {/* Main Single-Page Unified Dashboard View */}
       <main className="flex-grow p-4 md:p-8 max-w-7xl mx-auto w-full space-y-8">
-        {activeTab === 'dashboard' ? (
-          <>
-            {/* Step 1: Input Details Header */}
-            <div className="bg-white p-6 rounded-2xl shadow-md border border-[#E8630A]/15 space-y-4">
-              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                <h3 className="text-lg font-bold text-[#3D2C1E] flex items-center gap-2">
-                  <span>📝</span> फसल एवं खेत का विवरण दर्ज करें
-                </h3>
-                <span className="text-xs text-gray-500">चरण 1 / 2</span>
-              </div>
+        {/* Input Details Header */}
+        <div className="bg-white p-6 rounded-2xl shadow-md border border-[#E8630A]/15 space-y-4">
+          <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+            <h3 className="text-lg font-bold text-[#3D2C1E] flex items-center gap-2">
+              <span>📝</span> {t.enterDetailsTitle}
+            </h3>
+            <span className="text-xs text-gray-500">{t.step1}</span>
+          </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">राज्य (State)</label>
-                  <input
-                    type="text"
-                    value={formState.state}
-                    onChange={e => setFormState({ ...formState, state: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:border-[#E8630A] focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">जिला (District)</label>
-                  <input
-                    type="text"
-                    value={formState.district}
-                    onChange={e => setFormState({ ...formState, district: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:border-[#E8630A] focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">फसल (Crop)</label>
-                  <select
-                    value={formState.crop}
-                    onChange={e => setFormState({ ...formState, crop: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:border-[#E8630A] focus:outline-none"
-                  >
-                    <option value="Wheat">गेहूं (Wheat)</option>
-                    <option value="Rice">चावल / धान (Rice)</option>
-                    <option value="Cotton">कपास (Cotton)</option>
-                    <option value="Sugarcane">गन्ना (Sugarcane)</option>
-                    <option value="Maize">मक्का (Maize)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">क्षेत्रफल (हेक्टेयर में)</label>
-                  <input
-                    type="number"
-                    step="0.5"
-                    value={formState.areaHectares}
-                    onChange={e => setFormState({ ...formState, areaHectares: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:border-[#E8630A] focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Step 2: Interactive Sentinel-2 Map */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-[#3D2C1E] flex items-center gap-2">
-                  <span>🗺️</span> Sentinel-2 मैप पर खेत चुनें
-                </h3>
-                {analyzing && (
-                  <span className="text-xs font-bold text-[#E8630A] animate-pulse">
-                    ⚡ 1-वर्षीय फसल चक्र व IMD मौसम डेटा विश्लेषण जारी है...
-                  </span>
-                )}
-              </div>
-
-              <FarmlandMap
-                selectedPos={selectedPos}
-                setSelectedPos={setSelectedPos}
-                onConfirmSelection={handleAnalyzeLand}
-                areaHectares={formState.areaHectares}
-              />
-            </div>
-
-            {/* Step 3: Land & Climate Telemetry Analysis Card */}
-            {analysisData && <LandAnalysisCard analysis={analysisData} />}
-
-            {/* Step 4: 1-Year Loan Cycle Crop Succession & Total Combined Revenue Report */}
-            {analysisData && (
-              <FullLandReport
-                analysisData={analysisData}
-                formState={formState}
-              />
-            )}
-
-            {/* Step 5: Financial Revenue Breakdown Card */}
-            {analysisData && (
-              <FinancialRevenueCard
-                predictions={analysisData.predictions}
-                baselineMetrics={analysisData.baseline_metrics}
-              />
-            )}
-
-            {/* Step 6: Download Official Bank Credit PDF Report Button */}
-            {analysisData && (
-              <div className="flex justify-center pt-2">
-                <PDFReportButton
-                  analysisData={analysisData}
-                  farmerName={user?.name}
-                  formState={formState}
-                />
-              </div>
-            )}
-
-            {/* Step 7: Multi-Season Crop Rotation Planner */}
-            <CropRotationPlanner areaHectares={parseFloat(formState.areaHectares) || 2.5} />
-          </>
-        ) : (
-          /* Dedicated AI Chat Assistant Tab */
-          <div className="bg-white rounded-2xl shadow-lg border border-[#E8630A]/15 h-[650px] flex flex-col overflow-hidden">
-            <div className="p-4 bg-[#2D6A4F] text-white flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">🌾</span>
-                <h3 className="font-bold text-lg">किसानAI सहायक चैट</h3>
-              </div>
-              <span className="text-xs bg-white/20 px-2.5 py-1 rounded-full">Groq LLaMA 3.3 Engine</span>
-            </div>
-
-            {/* Chat Body */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-[#FFF8F0] to-[#fcf3e8]">
-              {messages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  {msg.role === 'assistant' && (
-                    <div className="w-8 h-8 rounded-full bg-[#e6f0eb] border border-[#2D6A4F]/20 flex items-center justify-center text-sm shadow-sm flex-shrink-0">
-                      🌾
-                    </div>
-                  )}
-                  <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm shadow-sm whitespace-pre-wrap ${
-                      msg.role === 'user'
-                        ? 'bg-[#E8630A] text-white rounded-br-none'
-                        : 'bg-[#e6f0eb] text-[#3D2C1E] rounded-bl-none border border-[#2D6A4F]/10'
-                    }`}
-                  >
-                    {msg.content}
-                  </div>
-                </div>
-              ))}
-              {loadingChat && (
-                <div className="flex gap-2 items-center text-xs text-gray-500 italic">
-                  <span>🌾 AI सोच रहा है...</span>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Input Bar */}
-            <form onSubmit={handleSendChat} className="p-3 bg-white border-t flex gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">{t.state}</label>
               <input
                 type="text"
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                placeholder="फसल, आय या ऋण से जुड़ें सवाल पूछें..."
-                className="flex-1 px-4 py-3 bg-[#FFF8F0] border rounded-xl text-sm focus:outline-none focus:border-[#E8630A]"
+                value={formState.state}
+                onChange={e => setFormState({ ...formState, state: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:border-[#E8630A] focus:outline-none"
               />
-              <button
-                type="submit"
-                disabled={loadingChat || !input.trim()}
-                className="px-5 bg-[#E8630A] text-white rounded-xl hover:bg-[#d55809] transition flex items-center justify-center cursor-pointer disabled:opacity-50"
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">{t.district}</label>
+              <input
+                type="text"
+                value={formState.district}
+                onChange={e => setFormState({ ...formState, district: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:border-[#E8630A] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">{t.crop}</label>
+              <select
+                value={formState.crop}
+                onChange={e => setFormState({ ...formState, crop: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:border-[#E8630A] focus:outline-none"
               >
-                <SendIcon />
-              </button>
-            </form>
+                <option value="Wheat">{t.wheat}</option>
+                <option value="Rice">{t.rice}</option>
+                <option value="Cotton">{t.cotton}</option>
+                <option value="Sugarcane">{t.sugarcane}</option>
+                <option value="Maize">{t.maize}</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">
+                {t.areaHectares} <span className="text-[10px] text-[#2D6A4F]">({t.calculatedFromMap})</span>
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                value={formState.areaHectares}
+                onChange={e => setFormState({ ...formState, areaHectares: e.target.value })}
+                className="w-full px-3 py-2 border border-[#2D6A4F] bg-green-50/50 rounded-xl text-sm font-bold text-[#2D6A4F] focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Step 2: Interactive Sentinel-2 Map with Dynamic Polygon Area Measurement */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold text-[#3D2C1E] flex items-center gap-2">
+              <span>🗺️</span> {t.mapTitle}
+            </h3>
+            {analyzing && (
+              <span className="text-xs font-bold text-[#E8630A] animate-pulse">
+                {t.analyzingText}
+              </span>
+            )}
+          </div>
+
+          <FarmlandMap
+            selectedPos={selectedPos}
+            setSelectedPos={setSelectedPos}
+            onConfirmSelection={handleAnalyzeLand}
+            onAreaChange={handleAreaChange}
+            areaHectares={formState.areaHectares}
+            lang={lang}
+            t={t}
+          />
+        </div>
+
+        {/* Step 3: Land & Climate Analysis Card */}
+        {analysisData && <LandAnalysisCard analysis={analysisData} t={t} />}
+
+        {/* Step 4: 1-Year Crop Succession & 12-Month Timeline Report */}
+        {analysisData && (
+          <FullLandReport
+            analysisData={analysisData}
+            formState={formState}
+            t={t}
+          />
+        )}
+
+        {/* Step 5: Financial Revenue & Safe Credit Cap Card */}
+        {analysisData && (
+          <FinancialRevenueCard
+            predictions={analysisData.predictions}
+            baselineMetrics={analysisData.baseline_metrics}
+            t={t}
+          />
+        )}
+
+        {/* Step 6: PDF Report Button & Crop Rotation Planner */}
+        {analysisData && (
+          <div className="flex justify-center pt-2">
+            <PDFReportButton
+              analysisData={analysisData}
+              farmerName={user?.name}
+              formState={formState}
+              t={t}
+            />
           </div>
         )}
+
+        <CropRotationPlanner areaHectares={parseFloat(formState.areaHectares) || 2.5} t={t} />
+
+        {/* Step 7: Embedded AI Chat Assistant on Main Dashboard */}
+        <div className="bg-white rounded-2xl shadow-xl border border-[#E8630A]/20 h-[520px] flex flex-col overflow-hidden">
+          <div className="p-4 bg-[#2D6A4F] text-white flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🌾</span>
+              <h3 className="font-bold text-lg">{t.chatHeader}</h3>
+            </div>
+            <span className="text-xs bg-white/20 px-2.5 py-1 rounded-full">Groq LLaMA 3.3 Engine ({lang.toUpperCase()})</span>
+          </div>
+
+          {/* Chat Body */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-[#FFF8F0] to-[#fcf3e8]">
+            {messages.map((msg, idx) => (
+              <div
+                key={idx}
+                className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                {msg.role === 'assistant' && (
+                  <div className="w-8 h-8 rounded-full bg-[#e6f0eb] border border-[#2D6A4F]/20 flex items-center justify-center text-sm shadow-sm flex-shrink-0">
+                    🌾
+                  </div>
+                )}
+                <div
+                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm shadow-sm whitespace-pre-wrap ${
+                    msg.role === 'user'
+                      ? 'bg-[#E8630A] text-white rounded-br-none'
+                      : 'bg-[#e6f0eb] text-[#3D2C1E] rounded-bl-none border border-[#2D6A4F]/10'
+                  }`}
+                >
+                  {msg.content}
+                </div>
+              </div>
+            ))}
+            {loadingChat && (
+              <div className="flex gap-2 items-center text-xs text-gray-500 italic">
+                <span>{t.chatSending}</span>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input Bar */}
+          <form onSubmit={handleSendChat} className="p-3 bg-white border-t flex gap-2">
+            <input
+              type="text"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              placeholder={t.chatPlaceholder}
+              className="flex-1 px-4 py-3 bg-[#FFF8F0] border rounded-xl text-sm focus:outline-none focus:border-[#E8630A]"
+            />
+            <button
+              type="submit"
+              disabled={loadingChat || !input.trim()}
+              className="px-5 bg-[#E8630A] text-white rounded-xl hover:bg-[#d55809] transition flex items-center justify-center cursor-pointer disabled:opacity-50"
+            >
+              <SendIcon />
+            </button>
+          </form>
+        </div>
       </main>
     </div>
   );

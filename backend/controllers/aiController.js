@@ -38,7 +38,7 @@ const SYSTEM_PROMPT = `आप किसानAI हैं — एक कृष�
 
 exports.chatWithAI = async (req, res) => {
   try {
-    const { message, chatId, landContext } = req.body;
+    const { message, chatId, landContext, lang } = req.body;
     const userId = req.user.id;
 
     let chat;
@@ -63,15 +63,32 @@ exports.chatWithAI = async (req, res) => {
     messagesHistory.push({ role: 'user', content: message });
     chat.messages.push({ role: 'user', content: message });
 
-    // Dynamic Context Injection for ML Data
-    let dynamicSystemPrompt = SYSTEM_PROMPT;
+    // Dynamic Language Prompt & Context Injection
+    const isEnglish = lang === 'en';
+    let dynamicSystemPrompt = isEnglish
+      ? `You are KrishiAI — an Agricultural Risk & Credit Assessment Assistant. Help farmers evaluate crop revenue, land health, weather risks, and loan repayment capacity. Respond clearly in English.`
+      : SYSTEM_PROMPT;
+
     if (landContext) {
-      dynamicSystemPrompt += `\n\n[सिस्टम अपडेट]: किसान ने अपनी जमीन का डेटा प्रदान किया है। 
-      अनुमानित आय: ₹${landContext.predictions?.adjusted_estimated_revenue_rs || 'N/A'} 
-      जोखिम स्तर: ${landContext.predictions?.risk_level || 'N/A'}
-      NDVI स्कोर: ${landContext.ai_scores?.ndvi?.score || 'N/A'}
-      मौसम: ${landContext.ai_scores?.weather?.description || 'N/A'}
-      इस डेटा का उपयोग करके किसान को सलाह दें।`;
+      if (isEnglish) {
+        dynamicSystemPrompt += `\n\n[SYSTEM DATA]: Farmland telemetry analysis received. 
+        Current Crop Revenue: ₹${landContext.predictions?.adjusted_estimated_revenue_rs || 'N/A'}
+        1-Year Total Combined Revenue: ₹${landContext.predictions?.total_1year_combined_revenue_rs || 'N/A'}
+        Recommended 1-Year Loan Cap (60% Rule): ₹${landContext.predictions?.suggested_loan_limit_rs || 'N/A'}
+        Risk Level: ${landContext.predictions?.risk_level || 'N/A'}
+        NDVI Score: ${landContext.ai_scores?.ndvi?.score || 'N/A'}
+        IMD Weather: ${landContext.ai_scores?.weather?.description || 'N/A'}. 
+        Use this data to advise the farmer on their loan capacity and crop succession strategy.`;
+      } else {
+        dynamicSystemPrompt += `\n\n[सिस्टम अपडेट]: किसान ने अपनी जमीन का डेटा प्रदान किया है। 
+        वर्तमान फसल आय: ₹${landContext.predictions?.adjusted_estimated_revenue_rs || 'N/A'}
+        1-वर्षीय कुल संयुक्त आय: ₹${landContext.predictions?.total_1year_combined_revenue_rs || 'N/A'}
+        सुरक्षित ऋण सीमा (60% नियम): ₹${landContext.predictions?.suggested_loan_limit_rs || 'N/A'}
+        जोखिम स्तर: ${landContext.predictions?.risk_level || 'N/A'}
+        NDVI स्कोर: ${landContext.ai_scores?.ndvi?.score || 'N/A'}
+        मौसम: ${landContext.ai_scores?.weather?.description || 'N/A'}
+        इस डेटा का उपयोग करके किसान को फसल उत्तराधिकार एवं ऋण स्वीकृति पर सलाह दें।`;
+      }
     }
 
     // Construct full prompt for Groq

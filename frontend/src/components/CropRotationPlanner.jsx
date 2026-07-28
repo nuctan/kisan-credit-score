@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 const CROP_ROTATION_CYCLES = [
   {
@@ -27,9 +27,7 @@ const CROP_ROTATION_CYCLES = [
   }
 ];
 
-const CropRotationPlanner = ({ areaHectares = 2.5 }) => {
-  const [selectedCrop, setSelectedCrop] = useState('गेहूं (Wheat)');
-
+const CropRotationPlanner = ({ areaHectares = 2.5, t }) => {
   const totalAnnualProjectedRevenue = CROP_ROTATION_CYCLES.reduce(
     (sum, cycle) => sum + (cycle.estRevenuePerHectare * areaHectares),
     0
@@ -41,12 +39,14 @@ const CropRotationPlanner = ({ areaHectares = 2.5 }) => {
         <div className="flex items-center gap-3">
           <span className="text-3xl">🔄</span>
           <div>
-            <h3 className="text-xl font-bold text-[#3D2C1E]">फसल चक्र व वार्षिक आय योजक (Crop Rotation Planner)</h3>
+            <h3 className="text-xl font-bold text-[#3D2C1E]">
+              {t?.cropRotationTitle || 'फसल चक्र व वार्षिक आय योजक (Crop Rotation Planner)'}
+            </h3>
             <p className="text-xs text-gray-500">मिट्टी की उर्वरता बनाए रखने एवं अधिकतम वार्षिक आय हेतु अनुशंसित चक्र</p>
           </div>
         </div>
         <div className="text-right">
-          <span className="text-xs text-gray-500 font-semibold block">वार्षिक कुल संभावित आय</span>
+          <span className="text-xs text-gray-500 font-semibold block">{t?.total1YearRev || 'वार्षिक कुल संभावित आय'}</span>
           <span className="text-xl font-black text-[#2D6A4F]">
             ₹{Math.round(totalAnnualProjectedRevenue).toLocaleString('en-IN')}
           </span>
@@ -73,7 +73,7 @@ const CropRotationPlanner = ({ areaHectares = 2.5 }) => {
             </p>
 
             <div className="pt-3 border-t border-gray-200/60 flex items-center justify-between text-xs">
-              <span className="text-gray-500 font-semibold">अनुमानित आय ({areaHectares} Ha):</span>
+              <span className="text-gray-500 font-semibold">{t?.estRevenue || 'अनुमानित आय'} ({areaHectares} Ha):</span>
               <strong className="text-sm font-bold text-[#E8630A]">
                 ₹{Math.round(cycle.estRevenuePerHectare * areaHectares).toLocaleString('en-IN')}
               </strong>
@@ -86,8 +86,8 @@ const CropRotationPlanner = ({ areaHectares = 2.5 }) => {
       <div className="bg-[#FFF8F0] p-4 rounded-xl border border-[#E8630A]/20 flex items-start gap-3 text-xs text-[#3D2C1E]">
         <span className="text-xl">💡</span>
         <div>
-          <strong className="font-bold text-[#E8630A] block mb-0.5">कृषि विशेषज्ञ सुझाव:</strong>
-          गेहूं के बाद दलहन (दलहनी फसलें जैसे मूंग या चना) उगाने से हवा में मौजूद नाइट्रोजन प्राकृतिक रूप से मिट्टी में जम जाती है। इससे अगली फसल के लिए यूरिया की लागत में 25% तक की बचत होती है और रीपेमेंट क्षमता बढ़ती है।
+          <strong className="font-bold text-[#E8630A] block mb-0.5">{t?.expertTip || 'कृषि विशेषज्ञ सुझाव:'}</strong>
+          गेहूं के बाद दलहन (मूंग) उगाने से नाइट्रोजन प्राकृतिक रूप से मिट्टी में जम जाती है, जिससे उर्वरक लागत घटती है व रीपेमेंट क्षमता बढ़ती है।
         </div>
       </div>
     </div>
