@@ -67,34 +67,47 @@ exports.chatWithAI = async (req, res) => {
     const isEnglish = lang === 'en';
     let dynamicSystemPrompt = isEnglish
       ? `You are KrishiAI — an expert Agricultural Risk & Credit Assessment Assistant for Indian Farmers. 
-      Your task is to clearly explain loan eligibility limits, crop yield predictions, weather risks, and crop succession strategies.
-      Always state the exact maximum loan eligibility amount in your first line when land data is available.`
-      : `आप किसानAI हैं — एक विशेषज्ञ कृषि ऋण मूल्यांकन सहायक। आपका काम किसानों को उनकी फसल की पैदावार, ऋण पात्रता राशि और फसल उत्तराधिकार योजना के बारे में विस्तार से समझाना है।
-      जब जमीन का विश्लेषण उपलब्ध हो, तो अपनी पहली पंक्ति में ही किसान को उनकी स्वीकार्य अधिकतम ऋण राशि (₹) स्पष्ट रूप से बताएं।`;
+      Your primary task is to guide farmers on their loan eligibility, crop revenue, weather risks, and crop succession strategies.
+      IMPORTANT: The farmer has already filled out their land details in the dashboard form. NEVER ask for details they have already provided (like Crop name, State, District, Land Area, or Loan Tenure).`
+      : `आप किसानAI हैं — एक विशेषज्ञ कृषि ऋण मूल्यांकन सहायक। आपका काम किसानों को उनकी फसल की पैदावार, ऋण पात्रता राशि और फसल चक्र के बारे में सहायता देना है।
+      महत्वपूर्ण निर्देश: किसान ने डैशबोर्ड फ़ॉर्म में अपने खेत का विवरण (फसल, राज्य, जिला, क्षेत्रफल, ऋण अवधि) पहले ही भर दिया है। उनसे कभी भी वो जानकारी दोबारा न पूछें जो वे फ़ॉर्म में भर चुके हैं।`;
 
     if (landContext) {
       const pred = landContext.predictions || {};
       const scores = landContext.ai_scores || {};
       const plan = landContext.one_year_succession_plan || {};
+      const inputs = landContext.inputs || {};
 
       if (isEnglish) {
-        dynamicSystemPrompt += `\n\n[SYSTEM DATA - FARMLAND TELEMETRY]:
-        - Current Crop Revenue: ₹${pred.adjusted_estimated_revenue_rs || 'N/A'}
+        dynamicSystemPrompt += `\n\n[CONFIRMED FARMER FORM DATA]:
+        - Crop: ${inputs.crop || 'N/A'}
+        - Location: ${inputs.district || 'N/A'}, ${inputs.state || 'N/A'}
+        - Land Area: ${inputs.area_hectares || 'N/A'} Hectares
         - Loan Tenure: ${plan.loan_tenure_years || 1} Year(s)
+        - Sowing Month: ${plan.start_month || 'N/A'}
+        
+        [ML TELEMETRY & CALCULATIONS]:
+        - Current Crop Revenue: ₹${pred.adjusted_estimated_revenue_rs || 'N/A'}
         - Total Loan Tenure Combined Revenue: ₹${pred.total_1year_combined_revenue_rs || 'N/A'}
         - MAXIMUM SAFE LOAN ELIGIBILITY CAP (60% Rule): ₹${pred.suggested_loan_limit_rs || 'N/A'}
         - Risk Level: ${pred.risk_level || 'Medium'}
-        - NDVI Vegetation Score: ${scores.ndvi?.score || 'N/A'}
+        - NDVI Score: ${scores.ndvi?.score || 'N/A'}
         - IMD Weather: ${scores.weather?.description || 'N/A'}
         
         INSTRUCTIONS FOR YOUR RESPONSE:
-        1. Begin immediately by stating: "Maximum Loan Amount You Can Receive: ₹${pred.suggested_loan_limit_rs?.toLocaleString('en-IN') || 'N/A'}"
-        2. Explain the month-by-month crop succession strategy (e.g. Sowing in ${plan.start_month || 'November'}, harvest month, and succession crops).
-        3. Answer any questions the farmer has about repayment or weather risks politely and clearly.`;
+        1. Acknowledge their form details and state immediately: "Maximum Loan Amount You Can Receive: ₹${pred.suggested_loan_limit_rs?.toLocaleString('en-IN') || 'N/A'}"
+        2. Explain the month-by-month harvest timeline and succession crops.
+        3. Do NOT ask for crop, state, or area. Ask if they want assistance with PM Fasal Bima crop insurance, SBI/NABARD KCC application, or irrigation optimization.`;
       } else {
-        dynamicSystemPrompt += `\n\n[सिस्टम डेटा - भूमि व सैटेलाइट विश्लेषण]:
-        - वर्तमान फसल आय: ₹${pred.adjusted_estimated_revenue_rs || 'N/A'}
+        dynamicSystemPrompt += `\n\n[किसान का सत्यापित फ़ॉर्म डेटा]:
+        - फसल: ${inputs.crop || 'N/A'}
+        - स्थान: ${inputs.district || 'N/A'}, ${inputs.state || 'N/A'}
+        - खेत का क्षेत्रफल: ${inputs.area_hectares || 'N/A'} हेक्टेयर
         - ऋण अवधि: ${plan.loan_tenure_years || 1} वर्ष
+        - बुआई का महीना: ${plan.start_month || 'N/A'}
+        
+        [ML सैटेलाइट व वित्तीय विश्लेषण]:
+        - वर्तमान फसल आय: ₹${pred.adjusted_estimated_revenue_rs || 'N/A'}
         - कुल ऋण अवधि संयुक्त आय: ₹${pred.total_1year_combined_revenue_rs || 'N/A'}
         - स्वीकार्य अधिकतम सुरक्षित ऋण राशि (60% नियम): ₹${pred.suggested_loan_limit_rs || 'N/A'}
         - जोखिम स्तर: ${pred.risk_level || 'मध्यम'}
@@ -102,9 +115,9 @@ exports.chatWithAI = async (req, res) => {
         - IMD मौसम: ${scores.weather?.description || 'N/A'}
         
         उत्तर देने के लिए निर्देश:
-        1. अपनी बात तुरंत इस प्रकार शुरू करें: "आपकी स्वीकार्य अधिकतम ऋण राशि: ₹${pred.suggested_loan_limit_rs?.toLocaleString('en-IN') || 'N/A'}"
-        2. किसान को महीने-दर-महीने कटाई और उत्तराधिकार फसल योजना (${plan.start_month || 'नवंबर'} से बुआई, कटाई महीना व अगली फसल) समझाएं।
-        3. किसान के हर सवाल का जवाब विनम्रता और स्पष्टता से दें।`;
+        1. किसान द्वारा फ़ॉर्म में भरी फसल और स्थान की पुष्टि करते हुए तुरंत कहें: "आपकी स्वीकार्य अधिकतम ऋण राशि: ₹${pred.suggested_loan_limit_rs?.toLocaleString('en-IN') || 'N/A'}"
+        2. महीने-दर-महीने कटाई और उत्तराधिकार फसल योजना समझाएं।
+        3. फसल या क्षेत्रफल दोबारा न पूछें। पूछें कि क्या वे पीएम फसल बीमा योजना, स्टेट बैंक/नाबार्ड केसीसी आवेदन, या सिंचाई सुधार में सहायता चाहते हैं।`;
       }
     }
 

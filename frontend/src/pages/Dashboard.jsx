@@ -83,19 +83,36 @@ const Dashboard = () => {
     }));
   };
 
-  // Chat states
-  const welcomeMessage = {
-    role: 'assistant',
-    content: lang === 'en'
-      ? 'Hello! 🙏 I am KrishiAI. When you select your farmland on the map, I will instantly analyze your multi-year crop yield, weather risks, and tell you the exact maximum loan amount you can receive.'
-      : 'नमस्ते! 🙏 मैं किसानAI हूँ। जब आप अपनी जमीन का चयन करते हैं, तो मैं आपकी फसल एवं चुनी हुई ऋण अवधि (1-5 वर्ष) के अनुसार स्वीकार्य अधिकतम ऋण राशि और फसल चक्र प्रस्तुत करूँगा।'
+  // Construct Dynamic Welcome Message that SYNCs automatically with Form Inputs
+  const getDynamicWelcomeMessage = () => {
+    const monthName = MONTHS_LIST[formState.startMonthIndex]?.[lang] || 'November';
+    if (lang === 'en') {
+      return {
+        role: 'assistant',
+        content: `Hello! 🙏 I am KrishiAI. I see you selected **${formState.crop}** on **${formState.areaHectares} Hectares** in **${formState.district}, ${formState.state}**, sown in **${monthName}** for a **${formState.loanTenureYears}-Year** loan tenure. Click "Analyze Selected Farmland" on the map or ask me any question about your loan limit!`
+      };
+    }
+    return {
+      role: 'assistant',
+      content: `नमस्ते! 🙏 मैं किसानAI हूँ। मैं देख सकता हूँ कि आपने **${formState.district}, ${formState.state}** में **${formState.areaHectares} हेक्टेयर** पर **${formState.crop}** फसल, बुआई **${monthName}**, और **${formState.loanTenureYears}-वर्षीय** ऋण चुना है। नक्शे पर "इस भूमि का विश्लेषण करें" दबाएं या मुझसे कोई भी सवाल पूछें!`
+    };
   };
 
-  const [messages, setMessages] = useState([welcomeMessage]);
+  const [messages, setMessages] = useState([getDynamicWelcomeMessage()]);
   const [input, setInput] = useState('');
   const [loadingChat, setLoadingChat] = useState(false);
   const [chatId, setChatId] = useState(null);
   const messagesEndRef = useRef(null);
+
+  // Synchronize AI Chat Welcome Message when form inputs or language change
+  useEffect(() => {
+    setMessages(prev => {
+      // Replace opening welcome message with synced version
+      const updated = [...prev];
+      updated[0] = getDynamicWelcomeMessage();
+      return updated;
+    });
+  }, [formState.crop, formState.areaHectares, formState.district, formState.state, formState.startMonthIndex, formState.loanTenureYears, lang]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -136,8 +153,8 @@ const Dashboard = () => {
       const loanCap = pred?.suggested_loan_limit_rs;
 
       const summaryMsg = lang === 'en'
-        ? `🌾 **Maximum Loan Amount You Can Receive: ₹${Math.round(loanCap).toLocaleString('en-IN')}**\n\n1. Current ${formState.crop} Income: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. Total Combined Income (${formState.loanTenureYears} Years): ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. Crop Duration: ${formState.cropDurationMonths} Months (Harvest in ${MONTHS_LIST[(formState.startMonthIndex + formState.cropDurationMonths) % 12].en})\n\nWould you like assistance with your bank loan application?`
-        : `🌾 **आपकी स्वीकार्य अधिकतम ऋण राशि: ₹${Math.round(loanCap).toLocaleString('en-IN')}**\n\n1. वर्तमान ${formState.crop} फसल आय: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. ${formState.loanTenureYears}-वर्षीय कुल संयुक्त आय: ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. फसल अवधि: ${formState.cropDurationMonths} महीने (कटाई: ${MONTHS_LIST[(formState.startMonthIndex + formState.cropDurationMonths) % 12].hi})\n\nक्या आप बैंक ऋण प्रक्रिया में सहायता चाहते हैं?`;
+        ? `🌾 **Maximum Loan Amount You Can Receive: ₹${Math.round(loanCap).toLocaleString('en-IN')}**\n\n1. Current ${formState.crop} Income: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. Total Combined Income (${formState.loanTenureYears} Years): ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. Harvest Month: ${MONTHS_LIST[(formState.startMonthIndex + formState.cropDurationMonths) % 12].en}\n\nWould you like assistance with PM Fasal Bima crop insurance or SBI/NABARD KCC loan application?`
+        : `🌾 **आपकी स्वीकार्य अधिकतम ऋण राशि: ₹${Math.round(loanCap).toLocaleString('en-IN')}**\n\n1. वर्तमान ${formState.crop} फसल आय: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. ${formState.loanTenureYears}-वर्षीय कुल संयुक्त आय: ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. कटाई का महीना: ${MONTHS_LIST[(formState.startMonthIndex + formState.cropDurationMonths) % 12].hi}\n\nक्या आप पीएम फसल बीमा योजना या स्टेट बैंक/नाबार्ड केसीसी ऋण आवेदन में सहायता चाहते हैं?`;
 
       setMessages(prev => [...prev, { role: 'assistant', content: summaryMsg }]);
     } catch (err) {
@@ -147,7 +164,7 @@ const Dashboard = () => {
     }
   };
 
-  // Chat send handler
+  // Chat send handler with Live Form Data Payload
   const handleSendChat = async (e) => {
     e.preventDefault();
     if (!input.trim() || loadingChat) return;
@@ -164,7 +181,18 @@ const Dashboard = () => {
         {
           message: userMessage,
           chatId,
-          landContext: analysisData,
+          landContext: analysisData || {
+            inputs: {
+              state: formState.state,
+              district: formState.district,
+              crop: formState.crop,
+              area_hectares: formState.areaHectares,
+            },
+            one_year_succession_plan: {
+              loan_tenure_years: formState.loanTenureYears,
+              start_month: MONTHS_LIST[formState.startMonthIndex].en
+            }
+          },
           lang: lang
         },
         { headers: { Authorization: `Bearer ${token}` } }
