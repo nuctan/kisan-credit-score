@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import FarmlandMap from '../components/FarmlandMap';
 import LandAnalysisCard from '../components/LandAnalysisCard';
 import FinancialRevenueCard from '../components/FinancialRevenueCard';
+import PDFReportButton from '../components/PDFReportButton';
+import CropRotationPlanner from '../components/CropRotationPlanner';
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -16,7 +17,7 @@ const SendIcon = () => (
 
 const WELCOME_MESSAGE = {
   role: 'assistant',
-  content: 'नमस्ते! 🙏 मैं किसानAI हूँ। जब आप अपनी जमीन का चयन करते हैं, तो मैं आपकी फसल की अनुमानित आय, NDVI स्वास्थ्य और ऋण पात्रता के बारे में आपकी सहायता कर सकता हूँ।'
+  content: 'नमस्ते! 🙏 मैं किसानAI हूँ। जब आप अपनी जमीन का चयन करते हैं, तो मैं आपकी फसल की अनुमानित आय, IMD मौसम अलर्ट, NDVI स्वास्थ्य और ऋण पात्रता के बारे में आपकी सहायता कर सकता हूँ।'
 };
 
 const Dashboard = () => {
@@ -78,7 +79,8 @@ const Dashboard = () => {
 
       // Add a summary message into the chat assistant
       const pred = res.data.predictions;
-      const summaryMsg = `🌾 **विश्लेषण पूर्ण हुआ!**\n\nआपकी ${formState.areaHectares} हेक्टेयर ${formState.crop} की फसल से अनुमानित आय: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n\nअनुशंसित सुरक्षित ऋण सीमा: ₹${pred?.suggested_loan_limit_rs?.toLocaleString('en-IN')}\nजोखिम स्तर: ${pred?.risk_level}.\n\nक्या आप इस पर और चर्चा करना चाहते हैं?`;
+      const weatherText = res.data.ai_scores?.weather?.description || '';
+      const summaryMsg = `🌾 **विश्लेषण पूर्ण हुआ!**\n\nआपकी ${formState.areaHectares} हेक्टेयर ${formState.crop} की फसल से अनुमानित आय: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n\nमौसम (IMD): ${weatherText}\nअनुशंसित सुरक्षित ऋण सीमा: ₹${pred?.suggested_loan_limit_rs?.toLocaleString('en-IN')}\nजोखिम स्तर: ${pred?.risk_level}.\n\nक्या आप इस पर और चर्चा करना चाहते हैं?`;
       
       setMessages(prev => [...prev, { role: 'assistant', content: summaryMsg }]);
     } catch (err) {
@@ -135,7 +137,7 @@ const Dashboard = () => {
             <h1 className="text-2xl font-bold text-[#E8630A]">
               किसान<span className="text-[#2D6A4F]">AI</span>
             </h1>
-            <p className="text-xs text-gray-500 hidden sm:block">Sentinel-2 मैप व AI फसल ऋण मूल्यांकन</p>
+            <p className="text-xs text-gray-500 hidden sm:block">Sentinel-2 व IMD लाइव मौसम ऋण मूल्यांकन</p>
           </div>
         </div>
 
@@ -247,7 +249,7 @@ const Dashboard = () => {
                 </h3>
                 {analyzing && (
                   <span className="text-xs font-bold text-[#E8630A] animate-pulse">
-                    ⚡ ML इंजन विश्लेषण कर रहा है...
+                    ⚡ ML इंजन एवं IMD मौसम डेटा विश्लेषण कर रहा है...
                   </span>
                 )}
               </div>
@@ -269,6 +271,20 @@ const Dashboard = () => {
                 baselineMetrics={analysisData.baseline_metrics}
               />
             )}
+
+            {/* Step 5: Download Official Bank Credit PDF Report Button */}
+            {analysisData && (
+              <div className="flex justify-center pt-2">
+                <PDFReportButton
+                  analysisData={analysisData}
+                  farmerName={user?.name}
+                  formState={formState}
+                />
+              </div>
+            )}
+
+            {/* Step 6: Multi-Season Crop Rotation Planner */}
+            <CropRotationPlanner areaHectares={parseFloat(formState.areaHectares) || 2.5} />
           </>
         ) : (
           /* Dedicated AI Chat Assistant Tab */
