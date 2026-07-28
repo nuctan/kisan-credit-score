@@ -1,0 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
+@import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #E8630A;
+  --color-secondary: #2D6A4F;
+  --color-accent: #D4A017;
+  --color-bg-light: #FFF8F0;
+  --color-bg-dark: #1A1A0E;
+  --color-text-main: #3D2C1E;
+  
+  --font-sans: 'Noto Sans Devanagari', ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background-color: var(--color-bg-light);
+  color: var(--color-text-main);
+  font-family: var(--font-sans);
+}
