@@ -6,6 +6,7 @@ import LandAnalysisCard from '../components/LandAnalysisCard';
 import FinancialRevenueCard from '../components/FinancialRevenueCard';
 import PDFReportButton from '../components/PDFReportButton';
 import CropRotationPlanner from '../components/CropRotationPlanner';
+import FullLandReport from '../components/FullLandReport';
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -17,7 +18,7 @@ const SendIcon = () => (
 
 const WELCOME_MESSAGE = {
   role: 'assistant',
-  content: 'नमस्ते! 🙏 मैं किसानAI हूँ। जब आप अपनी जमीन का चयन करते हैं, तो मैं आपकी फसल की अनुमानित आय, IMD मौसम अलर्ट, NDVI स्वास्थ्य और ऋण पात्रता के बारे में आपकी सहायता कर सकता हूँ।'
+  content: 'नमस्ते! 🙏 मैं किसानAI हूँ। जब आप अपनी जमीन का चयन करते हैं, तो मैं आपकी वर्तमान फसल के साथ-साथ पूरे 1-वर्षीय ऋण चक्र के लिए अनुशंसित फसल उत्तराधिकार और आय का विश्लेषण प्रस्तुत कर सकता हूँ।'
 };
 
 const Dashboard = () => {
@@ -77,10 +78,13 @@ const Dashboard = () => {
 
       setAnalysisData(res.data);
 
-      // Add a summary message into the chat assistant
+      // Add 1-Year Succession Summary into AI Chat Context
       const pred = res.data.predictions;
       const weatherText = res.data.ai_scores?.weather?.description || '';
-      const summaryMsg = `🌾 **विश्लेषण पूर्ण हुआ!**\n\nआपकी ${formState.areaHectares} हेक्टेयर ${formState.crop} की फसल से अनुमानित आय: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n\nमौसम (IMD): ${weatherText}\nअनुशंसित सुरक्षित ऋण सीमा: ₹${pred?.suggested_loan_limit_rs?.toLocaleString('en-IN')}\nजोखिम स्तर: ${pred?.risk_level}.\n\nक्या आप इस पर और चर्चा करना चाहते हैं?`;
+      const total1YearRev = res.data.predictions?.total_1year_combined_revenue_rs || pred?.adjusted_estimated_revenue_rs * 2.2;
+      const loanCap = res.data.predictions?.suggested_loan_limit_rs;
+      
+      const summaryMsg = `🌾 **1-वर्षीय ऋण व फसल उत्तराधिकार विश्लेषण पूर्ण हुआ!**\n\n1. वर्तमान ${formState.crop} फसल आय: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. 1-वर्षीय कुल संयुक्त आय (3 फसल चक्र): ₹${Math.round(total1YearRev).toLocaleString('en-IN')}\n3. अनुशंसित 1-वर्षीय सुरक्षित ऋण सीमा: ₹${Math.round(loanCap).toLocaleString('en-IN')}\n4. IMD मौसम: ${weatherText}\n\nआपकी गेहूं की कटाई के बाद ग्रीष्मकालीन मूंग व मानसून धान उगाने का सुझाव है। क्या आप इस पर अधिक जानकारी चाहते हैं?`;
       
       setMessages(prev => [...prev, { role: 'assistant', content: summaryMsg }]);
     } catch (err) {
@@ -137,7 +141,7 @@ const Dashboard = () => {
             <h1 className="text-2xl font-bold text-[#E8630A]">
               किसान<span className="text-[#2D6A4F]">AI</span>
             </h1>
-            <p className="text-xs text-gray-500 hidden sm:block">Sentinel-2 व IMD लाइव मौसम ऋण मूल्यांकन</p>
+            <p className="text-xs text-gray-500 hidden sm:block">Sentinel-2 व 1-वर्षीय ऋण चक्र फसल उत्तराधिकार प्रणाली</p>
           </div>
         </div>
 
@@ -249,7 +253,7 @@ const Dashboard = () => {
                 </h3>
                 {analyzing && (
                   <span className="text-xs font-bold text-[#E8630A] animate-pulse">
-                    ⚡ ML इंजन एवं IMD मौसम डेटा विश्लेषण कर रहा है...
+                    ⚡ 1-वर्षीय फसल चक्र व IMD मौसम डेटा विश्लेषण जारी है...
                   </span>
                 )}
               </div>
@@ -258,13 +262,22 @@ const Dashboard = () => {
                 selectedPos={selectedPos}
                 setSelectedPos={setSelectedPos}
                 onConfirmSelection={handleAnalyzeLand}
+                areaHectares={formState.areaHectares}
               />
             </div>
 
-            {/* Step 3: Land & Climate Analysis Card */}
+            {/* Step 3: Land & Climate Telemetry Analysis Card */}
             {analysisData && <LandAnalysisCard analysis={analysisData} />}
 
-            {/* Step 4: Revenue Projections & Financial Assessment */}
+            {/* Step 4: 1-Year Loan Cycle Crop Succession & Total Combined Revenue Report */}
+            {analysisData && (
+              <FullLandReport
+                analysisData={analysisData}
+                formState={formState}
+              />
+            )}
+
+            {/* Step 5: Financial Revenue Breakdown Card */}
             {analysisData && (
               <FinancialRevenueCard
                 predictions={analysisData.predictions}
@@ -272,7 +285,7 @@ const Dashboard = () => {
               />
             )}
 
-            {/* Step 5: Download Official Bank Credit PDF Report Button */}
+            {/* Step 6: Download Official Bank Credit PDF Report Button */}
             {analysisData && (
               <div className="flex justify-center pt-2">
                 <PDFReportButton
@@ -283,7 +296,7 @@ const Dashboard = () => {
               </div>
             )}
 
-            {/* Step 6: Multi-Season Crop Rotation Planner */}
+            {/* Step 7: Multi-Season Crop Rotation Planner */}
             <CropRotationPlanner areaHectares={parseFloat(formState.areaHectares) || 2.5} />
           </>
         ) : (

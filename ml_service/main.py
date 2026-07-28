@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import uvicorn
 from data_loader import get_historical_averages
 from scoring import get_ndvi_score, get_weather_score, get_soil_score, calculate_adjusted_revenue
+from crop_succession import get_1year_crop_succession_plan
 
 app = FastAPI(title="KrishiAI ML Service")
 
@@ -24,12 +25,12 @@ def predict_revenue(req: PredictionRequest):
     # Base calculation: Area * Yield(Tonnes) * 10 (Quintals/Tonne) * Price
     base_revenue = req.area_hectares * yield_per_hectare * 10 * price_per_quintal
     
-    # 2. Get ML Scores
+    # 2. Get ML Scores & Telemetry
     ndvi_data = get_ndvi_score(req.lat, req.lon, req.crop)
     weather_data = get_weather_score(req.lat, req.lon)
     soil_data = get_soil_score(req.state, req.district)
     
-    # 3. Calculate Adjusted Revenue
+    # 3. Calculate Adjusted Revenue for current crop
     adjusted_revenue = calculate_adjusted_revenue(
         base_revenue, 
         ndvi_data["score"], 
@@ -37,7 +38,10 @@ def predict_revenue(req: PredictionRequest):
         soil_data["score"]
     )
     
-    # 4. Calculate Risk Category
+    # 4. Calculate 1-Year Loan Cycle Crop Succession Plan
+    succession_plan = get_1year_crop_succession_plan(req.crop, req.area_hectares, adjusted_revenue)
+
+    # 5. Calculate Risk Category
     composite_multiplier = adjusted_revenue / base_revenue if base_revenue > 0 else 1.0
     if composite_multiplier > 1.05:
         risk_level = "Low"
@@ -62,8 +66,10 @@ def predict_revenue(req: PredictionRequest):
         "predictions": {
             "adjusted_estimated_revenue_rs": adjusted_revenue,
             "risk_level": risk_level,
-            "suggested_loan_limit_rs": round(adjusted_revenue * 0.60, 2) # 60% of projected revenue
-        }
+            "suggested_loan_limit_rs": succession_plan["one_year_loan_eligibility_cap_rs"],
+            "total_1year_combined_revenue_rs": succession_plan["total_1year_combined_revenue_rs"]
+        },
+        "one_year_succession_plan": succession_plan
     }
 
 if __name__ == "__main__":
