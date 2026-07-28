@@ -175,7 +175,7 @@ exports.getChatById = async (req, res) => {
 // Analyze Land via Python ML Service
 exports.analyzeLand = async (req, res) => {
   try {
-    const { state, district, crop, area_hectares, lat, lon } = req.body;
+    const { state, district, crop, area_hectares, lat, lon, loan_tenure_years, start_month_index, current_crop_duration } = req.body;
     
     // Call the Python FastAPI ML Microservice
     const mlResponse = await axios.post('http://127.0.0.1:8000/api/predict-revenue', {
@@ -184,7 +184,10 @@ exports.analyzeLand = async (req, res) => {
       crop,
       area_hectares,
       lat,
-      lon
+      lon,
+      loan_tenure_years: loan_tenure_years || 1,
+      start_month_index: start_month_index !== undefined ? start_month_index : 10,
+      current_crop_duration: current_crop_duration || 4
     });
 
     res.json(mlResponse.data);

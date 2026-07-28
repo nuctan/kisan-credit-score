@@ -17,6 +17,21 @@ const SendIcon = () => (
   </svg>
 );
 
+const MONTHS_LIST = [
+  { idx: 0, hi: 'जनवरी (January)', en: 'January' },
+  { idx: 1, hi: 'फ़रवरी (February)', en: 'February' },
+  { idx: 2, hi: 'मार्च (March)', en: 'March' },
+  { idx: 3, hi: 'अप्रैल (April)', en: 'April' },
+  { idx: 4, hi: 'मई (May)', en: 'May' },
+  { idx: 5, hi: 'जून (June)', en: 'June' },
+  { idx: 6, hi: 'जुलाई (July)', en: 'July' },
+  { idx: 7, hi: 'अगस्त (August)', en: 'August' },
+  { idx: 8, hi: 'सितंबर (September)', en: 'September' },
+  { idx: 9, hi: 'अक्टूबर (October)', en: 'October' },
+  { idx: 10, hi: 'नवंबर (November)', en: 'November' },
+  { idx: 11, hi: 'दिसंबर (December)', en: 'December' },
+];
+
 const Dashboard = () => {
   const navigate = useNavigate();
 
@@ -34,12 +49,15 @@ const Dashboard = () => {
     }
   }, [user, navigate]);
 
-  // Form states for Land Selection
+  // Form states for Land & Loan Selection
   const [formState, setFormState] = useState({
     state: 'Maharashtra',
     district: 'Ahilyanagar',
     crop: 'Wheat',
-    areaHectares: 2.5
+    areaHectares: 2.5,
+    loanTenureYears: 1,
+    startMonthIndex: 10, // November
+    cropDurationMonths: 4
   });
 
   const [selectedPos, setSelectedPos] = useState([19.0958, 74.7496]);
@@ -50,8 +68,8 @@ const Dashboard = () => {
   const welcomeMessage = {
     role: 'assistant',
     content: lang === 'en'
-      ? 'Hello! 🙏 I am KrishiAI. When you select your farmland polygon on the map, I will analyze your crop yield, 1-year loan cycle succession plan, and loan capacity.'
-      : 'नमस्ते! 🙏 मैं किसानAI हूँ। जब आप अपनी जमीन का चयन करते हैं, तो मैं आपकी वर्तमान फसल के साथ-साथ पूरे 1-वर्षीय ऋण चक्र के लिए अनुशंसित फसल उत्तराधिकार और आय का विश्लेषण प्रस्तुत कर सकता हूँ।'
+      ? 'Hello! 🙏 I am KrishiAI. When you select your farmland on the map, I will analyze your multi-year crop succession plan and loan eligibility.'
+      : 'नमस्ते! 🙏 मैं किसानAI हूँ। जब आप अपनी जमीन का चयन करते हैं, तो मैं आपकी फसल एवं चुनी हुई ऋण अवधि (1-5 वर्ष) के अनुसार संपूर्ण फसल चक्र व आय का विश्लेषण प्रस्तुत कर सकता हूँ।'
   };
 
   const [messages, setMessages] = useState([welcomeMessage]);
@@ -84,7 +102,10 @@ const Dashboard = () => {
           crop: formState.crop,
           area_hectares: areaToUse,
           lat: coords[0],
-          lon: coords[1]
+          lon: coords[1],
+          loan_tenure_years: parseInt(formState.loanTenureYears),
+          start_month_index: parseInt(formState.startMonthIndex),
+          current_crop_duration: parseInt(formState.cropDurationMonths)
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -92,12 +113,12 @@ const Dashboard = () => {
       setAnalysisData(res.data);
 
       const pred = res.data.predictions;
-      const total1YearRev = pred?.total_1year_combined_revenue_rs || pred?.adjusted_estimated_revenue_rs * 2.2;
+      const totalCombinedRev = pred?.total_1year_combined_revenue_rs || pred?.adjusted_estimated_revenue_rs * 2.2;
       const loanCap = pred?.suggested_loan_limit_rs;
 
       const summaryMsg = lang === 'en'
-        ? `🌾 **Analysis Complete!**\n\n1. Current ${formState.crop} Crop Income: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. Total 1-Year Combined Income (3 Seasons): ₹${Math.round(total1YearRev).toLocaleString('en-IN')}\n3. Recommended 1-Year Loan Cap: ₹${Math.round(loanCap).toLocaleString('en-IN')}\n\nWould you like to discuss loan application details?`
-        : `🌾 **1-वर्षीय ऋण व फसल उत्तराधिकार विश्लेषण पूर्ण हुआ!**\n\n1. वर्तमान ${formState.crop} फसल आय: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. 1-वर्षीय कुल संयुक्त आय (3 फसल चक्र): ₹${Math.round(total1YearRev).toLocaleString('en-IN')}\n3. अनुशंसित 1-वर्षीय सुरक्षित ऋण सीमा: ₹${Math.round(loanCap).toLocaleString('en-IN')}\n\nआपकी गेहूं की कटाई के बाद ग्रीष्मकालीन मूंग व मानसून धान उगाने का सुझाव है। क्या आप इस पर और जानकारी चाहते हैं?`;
+        ? `🌾 **${formState.loanTenureYears}-Year Loan Analysis Complete!**\n\n1. Current ${formState.crop} Income: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. Total Combined Income (${formState.loanTenureYears} Years): ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. Recommended Loan Limit: ₹${Math.round(loanCap).toLocaleString('en-IN')}\n\nSowing starts in ${MONTHS_LIST[formState.startMonthIndex].en}. Would you like to discuss the loan terms?`
+        : `🌾 **${formState.loanTenureYears}-वर्षीय ऋण व फसल उत्तराधिकार विश्लेषण पूर्ण हुआ!**\n\n1. वर्तमान ${formState.crop} फसल आय: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. ${formState.loanTenureYears}-वर्षीय कुल संयुक्त आय: ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. अनुशंसित सुरक्षित ऋण सीमा: ₹${Math.round(loanCap).toLocaleString('en-IN')}\n\nबुआई ${MONTHS_LIST[formState.startMonthIndex].hi} से शुरू होगी। क्या आप और जानकारी चाहते हैं?`;
 
       setMessages(prev => [...prev, { role: 'assistant', content: summaryMsg }]);
     } catch (err) {
@@ -254,6 +275,50 @@ const Dashboard = () => {
                 className="w-full px-3 py-2 border border-[#2D6A4F] bg-green-50/50 rounded-xl text-sm font-bold text-[#2D6A4F] focus:outline-none"
               />
             </div>
+
+            {/* Additional Inputs for Sowing Month, Duration, & Loan Tenure */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">{t.startMonth}</label>
+              <select
+                value={formState.startMonthIndex}
+                onChange={e => setFormState({ ...formState, startMonthIndex: parseInt(e.target.value) })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:border-[#E8630A] focus:outline-none"
+              >
+                {MONTHS_LIST.map(m => (
+                  <option key={m.idx} value={m.idx}>
+                    {lang === 'en' ? m.en : m.hi}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">{t.cropDuration}</label>
+              <select
+                value={formState.cropDurationMonths}
+                onChange={e => setFormState({ ...formState, cropDurationMonths: parseInt(e.target.value) })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:border-[#E8630A] focus:outline-none"
+              >
+                <option value={3}>3 {t.months}</option>
+                <option value={4}>4 {t.months}</option>
+                <option value={5}>5 {t.months}</option>
+                <option value={6}>6 {t.months}</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">{t.loanTenure}</label>
+              <select
+                value={formState.loanTenureYears}
+                onChange={e => setFormState({ ...formState, loanTenureYears: parseInt(e.target.value) })}
+                className="w-full px-3 py-2 border border-[#E8630A] bg-orange-50/50 rounded-xl text-sm font-bold text-[#E8630A] focus:outline-none"
+              >
+                <option value={1}>{t.oneYear}</option>
+                <option value={2}>{t.twoYears}</option>
+                <option value={3}>{t.threeYears}</option>
+                <option value={5}>{t.fiveYears}</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -284,7 +349,7 @@ const Dashboard = () => {
         {/* Step 3: Land & Climate Analysis Card */}
         {analysisData && <LandAnalysisCard analysis={analysisData} t={t} />}
 
-        {/* Step 4: 1-Year Crop Succession & 12-Month Timeline Report */}
+        {/* Step 4: Multi-Year Crop Succession & Loan Timeline Report */}
         {analysisData && (
           <FullLandReport
             analysisData={analysisData}

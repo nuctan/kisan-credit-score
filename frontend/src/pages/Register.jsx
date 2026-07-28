@@ -25,8 +25,20 @@ const Register = () => {
     
     try {
       const API_URL = 'http://localhost:5000/api';
-      const response = await axios.post(`${API_URL}/auth/register`, formData);
-      navigate('/login');
+      const response = await axios.post(`${API_URL}/auth/register`, {
+        name: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone
+      });
+
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data));
+        navigate('/dashboard');
+      } else {
+        navigate('/login');
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'रजिस्ट्रेशन विफल। कृपया बाद में प्रयास करें।');
     } finally {

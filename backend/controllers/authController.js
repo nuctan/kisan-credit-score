@@ -10,12 +10,17 @@ const generateToken = (id) => {
 
 exports.registerUser = async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, fullName, email, password, phone } = req.body;
+    const userNameToUse = name || fullName;
+
+    if (!userNameToUse || !email || !password) {
+      return res.status(400).json({ message: 'कृपया नाम, ईमेल और पासवर्ड भरें (Name, email, and password are required)' });
+    }
 
     // Check if user exists
     const userExists = await User.findOne({ email });
     if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(400).json({ message: 'User already exists with this email' });
     }
 
     // Hash password
@@ -24,7 +29,8 @@ exports.registerUser = async (req, res) => {
 
     // Create user
     const user = await User.create({
-      name,
+      name: userNameToUse,
+      username: email.split('@')[0], // default username fallback
       email,
       password: hashedPassword,
       phone: phone || '',

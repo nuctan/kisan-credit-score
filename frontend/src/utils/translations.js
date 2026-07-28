@@ -1,14 +1,14 @@
 export const translations = {
   hi: {
     title: 'किसानAI',
-    subtitle: 'Sentinel-2 मैप व 1-वर्षीय ऋण चक्र फसल उत्तराधिकार प्रणाली',
+    subtitle: 'Sentinel-2 मैप व बहु-वर्षीय ऋण चक्र फसल उत्तराधिकार प्रणाली',
     dashboardTab: '📊 डैशबोर्ड व नक्शा',
     chatTab: '💬 AI सहायक',
     logout: 'लॉग आउट',
     farmer: 'किसान',
     
     // Step 1: Input Details
-    enterDetailsTitle: 'फसल एवं खेत का विवरण दर्ज करें',
+    enterDetailsTitle: 'फसल, समय अवधि एवं ऋण की अवधि दर्ज करें',
     step1: 'चरण 1 / 2',
     state: 'राज्य (State)',
     district: 'जिला (District)',
@@ -16,6 +16,15 @@ export const translations = {
     areaHectares: 'क्षेत्रफल (हेक्टेयर)',
     areaBigha: 'क्षेत्रफल (बीघा)',
     calculatedFromMap: 'मानचित्र से स्वचालित गणना',
+    loanTenure: 'ऋण की अवधि (Loan Tenure)',
+    startMonth: 'बुवाई का महीना (Sowing Month)',
+    cropDuration: 'फसल अवधि (Crop Duration)',
+    oneYear: '1 वर्ष (1 Year)',
+    twoYears: '2 वर्ष (2 Years)',
+    threeYears: '3 वर्ष (3 Years)',
+    fiveYears: '5 वर्ष (5 Years)',
+    months: 'महीने (Months)',
+
     wheat: 'गेहूं (Wheat)',
     rice: 'चावल / धान (Rice)',
     cotton: 'कपास (Cotton)',
@@ -45,23 +54,23 @@ export const translations = {
     mandiPrice: 'मंडी भाव',
     perQuintal: 'रुपये/क्विंटल',
 
-    // 1-Year Succession
-    successionTitle: '1-वर्षीय ऋण चक्र एवं फसल उत्तराधिकार रिपोर्ट (1-Year Succession Plan)',
-    successionSubtitle: 'वर्तमान फसल की कटाई के बाद बचे हुए महीनों का 12-महीने का संपूर्ण आय नियोजन',
-    total1YearRev: '1-वर्षीय कुल संयुक्त आय',
+    // Multi-Year Succession
+    successionTitle: 'ऋण चक्र एवं फसल उत्तराधिकार रिपोर्ट (Multi-Year Crop Succession Plan)',
+    successionSubtitle: 'बुआई के महीने से फसल चक्र व बचे हुए ऋण अवधि का संपूर्ण आय नियोजन',
+    total1YearRev: 'ऋण अवधि की कुल संयुक्त आय',
     harvestMonth: 'कटाई',
     estRevenue: 'अनुमानित आय',
-    repaymentLogicTitle: '1-वर्षीय ऋण चुकाने की क्षमता का विश्लेषण (1-Year Repayment Logic):',
-    
+    repaymentLogicTitle: 'ऋण चुकाने की क्षमता का विश्लेषण:',
+
     // Financial & Credit Limit
     financialTitle: 'अनुमानित आय एवं ऋण पात्रता रिपोर्ट',
     financialSubtitle: 'फसल पैदावार और बाजार मूल्यों पर आधारित वित्तीय विश्लेषण',
     riskLevel: 'जोखिम स्तर',
     currentCropRev: 'वर्तमान फसल से अनुमानित आय',
-    futureCycleRev: 'भावी चक्रों की अनुमानित आय (2 सीजन)',
+    futureCycleRev: 'भावी चक्रों की अनुमानित आय',
     totalExpectedRev: 'कुल अपेक्षित आय (Total Revenue)',
     safeCreditCap: 'अनुशंसित अधिकतम सुरक्षित ऋण सीमा (Safe Credit Limit Cap)',
-    safeCreditDesc: 'आय की 60% सुरक्षित सीमा के आधार पर बैंक स्वीकृति हेतु उपयुक्त',
+    safeCreditDesc: 'आय की 55-60% सुरक्षित सीमा के आधार पर बैंक स्वीकृति हेतु उपयुक्त',
 
     // Actions & Reports
     downloadPdf: '📄 बैंक ऋण रिपोर्ट डाउनलोड करें (Download Official PDF Report)',
@@ -76,14 +85,14 @@ export const translations = {
   },
   en: {
     title: 'KrishiAI',
-    subtitle: 'Sentinel-2 Satellite Map & 1-Year Loan Cycle Crop Succession Platform',
+    subtitle: 'Sentinel-2 Satellite Map & Multi-Year Loan Cycle Crop Succession Platform',
     dashboardTab: '📊 Dashboard & Map',
     chatTab: '💬 AI Assistant',
     logout: 'Sign Out',
     farmer: 'Farmer',
 
     // Step 1: Input Details
-    enterDetailsTitle: 'Enter Crop & Land Details',
+    enterDetailsTitle: 'Enter Crop Details, Timing & Loan Tenure',
     step1: 'Step 1 / 2',
     state: 'State',
     district: 'District',
@@ -91,6 +100,15 @@ export const translations = {
     areaHectares: 'Area (Hectares)',
     areaBigha: 'Area (Bigha)',
     calculatedFromMap: 'Auto-calculated from Map',
+    loanTenure: 'Loan Tenure Duration',
+    startMonth: 'Sowing Start Month',
+    cropDuration: 'Current Crop Duration',
+    oneYear: '1 Year',
+    twoYears: '2 Years',
+    threeYears: '3 Years',
+    fiveYears: '5 Years',
+    months: 'Months',
+
     wheat: 'Wheat',
     rice: 'Rice / Paddy',
     cotton: 'Cotton',
@@ -120,23 +138,23 @@ export const translations = {
     mandiPrice: 'Mandi Price',
     perQuintal: 'Rs/Quintal',
 
-    // 1-Year Succession
-    successionTitle: '1-Year Loan Cycle & Crop Succession Plan',
-    successionSubtitle: '12-month complete income strategy for remaining months after current crop harvest',
-    total1YearRev: 'Total 1-Year Combined Revenue',
+    // Multi-Year Succession
+    successionTitle: 'Loan Cycle & Multi-Year Crop Succession Plan',
+    successionSubtitle: 'Complete multi-year crop succession strategy from sowing date through full loan tenure',
+    total1YearRev: 'Total Loan Tenure Combined Income',
     harvestMonth: 'Harvest',
     estRevenue: 'Estimated Revenue',
-    repaymentLogicTitle: '1-Year Repayment Capacity Analysis:',
+    repaymentLogicTitle: 'Loan Repayment Capacity Analysis:',
 
     // Financial & Credit Limit
     financialTitle: 'Estimated Income & Loan Eligibility Report',
     financialSubtitle: 'Financial evaluation based on crop yield and market prices',
     riskLevel: 'Risk Level',
     currentCropRev: 'Current Crop Estimated Income',
-    futureCycleRev: 'Projected Income (Next 2 Cycles)',
+    futureCycleRev: 'Projected Income (Future Cycles)',
     totalExpectedRev: 'Total Expected Revenue',
-    safeCreditCap: 'Maximum Safe Credit Limit Cap (60% Rule)',
-    safeCreditDesc: 'Recommended bank loan limit based on safe 60% repayment capacity',
+    safeCreditCap: 'Maximum Safe Credit Limit Cap (55-60% Rule)',
+    safeCreditDesc: 'Recommended bank loan limit based on safe repayment capacity',
 
     // Actions & Reports
     downloadPdf: '📄 Download Official Bank Credit Report (PDF)',

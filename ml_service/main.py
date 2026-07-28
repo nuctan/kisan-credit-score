@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from typing import Optional
 import uvicorn
 from data_loader import get_historical_averages
 from scoring import get_ndvi_score, get_weather_score, get_soil_score, calculate_adjusted_revenue
-from crop_succession import get_1year_crop_succession_plan
+from crop_succession import get_multiyear_crop_succession_plan
 
 app = FastAPI(title="KrishiAI ML Service")
 
@@ -14,6 +15,9 @@ class PredictionRequest(BaseModel):
     area_hectares: float
     lat: float
     lon: float
+    loan_tenure_years: Optional[int] = 1
+    start_month_index: Optional[int] = 10
+    current_crop_duration: Optional[int] = 4
 
 @app.post("/api/predict-revenue")
 def predict_revenue(req: PredictionRequest):
@@ -38,8 +42,19 @@ def predict_revenue(req: PredictionRequest):
         soil_data["score"]
     )
     
-    # 4. Calculate 1-Year Loan Cycle Crop Succession Plan
-    succession_plan = get_1year_crop_succession_plan(req.crop, req.area_hectares, adjusted_revenue)
+    # 4. Calculate Multi-Year Loan Cycle Crop Succession Plan
+    tenure_years = req.loan_tenure_years or 1
+    start_month_idx = req.start_month_index if req.start_month_index is not None else 10
+    crop_duration = req.current_crop_duration or 4
+
+    succession_plan = get_multiyear_crop_succession_plan(
+        req.crop, 
+        req.area_hectares, 
+        adjusted_revenue,
+        loan_tenure_years=tenure_years,
+        start_month_index=start_month_idx,
+        current_crop_duration=crop_duration
+    )
 
     # 5. Calculate Risk Category
     composite_multiplier = adjusted_revenue / base_revenue if base_revenue > 0 else 1.0
@@ -67,7 +82,7 @@ def predict_revenue(req: PredictionRequest):
             "adjusted_estimated_revenue_rs": adjusted_revenue,
             "risk_level": risk_level,
             "suggested_loan_limit_rs": succession_plan["one_year_loan_eligibility_cap_rs"],
-            "total_1year_combined_revenue_rs": succession_plan["total_1year_combined_revenue_rs"]
+            "total_1year_combined_revenue_rs": succession_plan["total_annual_combined_revenue_rs"]
         },
         "one_year_succession_plan": succession_plan
     }

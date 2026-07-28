@@ -1,120 +1,91 @@
-def get_1year_crop_succession_plan(current_crop: str, area_hectares: float, current_crop_revenue: float):
+MONTH_NAMES = [
+    "जनवरी (January)", "फ़रवरी (February)", "मार्च (March)", "अप्रैल (April)",
+    "मई (May)", "जून (June)", "जुलाई (July)", "अगस्त (August)",
+    "सितंबर (September)", "अक्टूबर (October)", "नवंबर (November)", "दिसंबर (December)"
+]
+
+def get_multiyear_crop_succession_plan(
+    current_crop: str, 
+    area_hectares: float, 
+    current_crop_revenue: float,
+    loan_tenure_years: int = 1,
+    start_month_index: int = 10, # default November (0-indexed 10)
+    current_crop_duration: int = 4
+):
     """
-    Calculates a 12-Month Crop Succession Plan for a 1-Year Loan Cycle.
-    If the current crop (e.g. Wheat) is harvested in ~3-4 months, it predicts 
-    what can be grown in the remaining months (Summer + Monsoon) to maximize 
-    annual income and soil health.
+    Calculates a multi-year (1, 2, 3, or 5 Year) crop succession and revenue plan.
+    Takes into account the exact sowing start month and current crop duration.
     """
+    total_months = loan_tenure_years * 12
     crop_lower = current_crop.lower()
+    
+    # 1. Harvest month index for current crop
+    first_harvest_month_idx = (start_month_index + current_crop_duration) % 12
+    
+    succession_cycles = []
+    
+    # Cycle 1: Current Crop
+    succession_cycles.append({
+        "cycle_number": 1,
+        "year": 1,
+        "period": f"महीने 1 - {current_crop_duration} ({MONTH_NAMES[start_month_index]} से {MONTH_NAMES[first_harvest_month_idx]})",
+        "crop": f"{current_crop} (वर्तमान फसल)",
+        "duration_months": current_crop_duration,
+        "harvest_month": MONTH_NAMES[first_harvest_month_idx],
+        "estimated_revenue_rs": round(current_crop_revenue, 2),
+        "soil_impact": "मुख्य फसल पैदावार",
+        "status": "वर्तमान में उगाई जा रही है"
+    })
 
-    # Pre-defined succession mapping based on Indian agricultural zones
-    if "wheat" in crop_lower or "गेहूं" in crop_lower:
-        succession_cycles = [
-          {
-            "cycle_number": 1,
-            "period": "महीने 1 - 4 (रबी - Winter)",
-            "crop": "गेहूं (Wheat - वर्तमान फसल)",
-            "duration_months": 4,
-            "harvest_month": "अप्रैल (April)",
-            "estimated_revenue_rs": round(current_crop_revenue, 2),
-            "soil_impact": "उच्च बाजार मांग, संतुलित पोषक तत्व खपत",
-            "status": "वर्तमान में उगाई जा रही है"
-          },
-          {
-            "cycle_number": 2,
-            "period": "महीने 5 - 7 (जायद - Summer)",
-            "crop": "मूंग दलहन (Mung Bean / Summer Pulses)",
-            "duration_months": 3,
-            "harvest_month": "जुलाई (July)",
-            "estimated_revenue_rs": round(area_hectares * 38000 * 1.05, 2),
-            "soil_impact": "मिट्टी में प्राकृतिक नाइट्रोजन निर्धारण (N-Fixation)",
-            "status": "कटाई पश्चात अनुशंसित उत्तराधिकारी फसल 1"
-          },
-          {
-            "cycle_number": 3,
-            "period": "महीने 8 - 12 (खरीफ - Monsoon)",
-            "crop": "धान / मक्का (Paddy / Maize)",
-            "duration_months": 5,
-            "harvest_month": "नवंबर (November)",
-            "estimated_revenue_rs": round(area_hectares * 85000 * 1.08, 2),
-            "soil_impact": "उच्च पैदावार, भरपूर मानसून वर्षा का उपयोग",
-            "status": "अनुशंसित उत्तराधिकारी फसल 2"
-          }
-        ]
-    elif "rice" in crop_lower or " धान" in crop_lower or "चावल" in crop_lower:
-        succession_cycles = [
-          {
-            "cycle_number": 1,
-            "period": "महीने 1 - 5 (खरीफ - Monsoon)",
-            "crop": "धान (Rice - वर्तमान फसल)",
-            "duration_months": 5,
-            "harvest_month": "नवंबर (November)",
-            "estimated_revenue_rs": round(current_crop_revenue, 2),
-            "soil_impact": "उच्च जल खपत, भरपूर मानसून उपयोग",
-            "status": "वर्तमान में उगाई जा रही है"
-          },
-          {
-            "cycle_number": 2,
-            "period": "महीने 6 - 9 (रबी - Winter)",
-            "crop": "गेहूं / चना (Wheat / Chickpea)",
-            "duration_months": 4,
-            "harvest_month": "मार्च (March)",
-            "estimated_revenue_rs": round(area_hectares * 78000 * 1.05, 2),
-            "soil_impact": "मिट्टी की नमी का उपयोग एवं बाजार मांग",
-            "status": "कटाई पश्चात अनुशंसित उत्तराधिकारी फसल 1"
-          },
-          {
-            "cycle_number": 3,
-            "period": "महीने 10 - 12 (जायद - Summer)",
-            "crop": "सूरजमुखी / सब्जियां (Sunflower / Vegetables)",
-            "duration_months": 3,
-            "harvest_month": "जून (June)",
-            "estimated_revenue_rs": round(area_hectares * 42000 * 1.02, 2),
-            "soil_impact": "त्वरित नकद आय एवं नमी संरक्षण",
-            "status": "अनुशंसित उत्तराधिकारी फसल 2"
-          }
-        ]
-    else: # Cotton / Sugarcane / Default
-        succession_cycles = [
-          {
-            "cycle_number": 1,
-            "period": "महीने 1 - 5 (वर्तमान सीजन)",
-            "crop": f"{current_crop} (वर्तमान फसल)",
-            "duration_months": 5,
-            "harvest_month": "नवंबर (November)",
-            "estimated_revenue_rs": round(current_crop_revenue, 2),
-            "soil_impact": "मुख्य नकदी फसल आय",
-            "status": "वर्तमान में उगाई जा रही है"
-          },
-          {
-            "cycle_number": 2,
-            "period": "महीने 6 - 9 (अगला सीजन)",
-            "crop": "चना / सरसों (Chickpea / Mustard)",
-            "duration_months": 4,
-            "harvest_month": "मार्च (March)",
-            "estimated_revenue_rs": round(area_hectares * 65000 * 1.04, 2),
-            "soil_impact": "उर्वरता संतुलन एवं तिलहन मांग",
-            "status": "कटाई पश्चात अनुशंसित उत्तराधिकारी फसल 1"
-          },
-          {
-            "cycle_number": 3,
-            "period": "महीने 10 - 12 (ग्रीष्म सीजन)",
-            "crop": "हरे चारे / दलहन (Fodder / Pulses)",
-            "duration_months": 3,
-            "harvest_month": "जून (June)",
-            "estimated_revenue_rs": round(area_hectares * 35000 * 1.02, 2),
-            "soil_impact": "जैविक कार्बन वृद्धि",
-            "status": "अनुशंसित उत्तराधिकारी फसल 2"
-          }
-        ]
+    remaining_months = total_months - current_crop_duration
+    current_month_cursor = first_harvest_month_idx
+    cycle_counter = 2
+    
+    # Succession Pool based on crop rotation science
+    rotation_pool = [
+        {"crop": "मूंग दलहन (Mung Bean / Pulses)", "rev_per_ha": 38000, "duration": 3, "impact": "मिट्टी में नाइट्रोजन निर्धारण (N-Fixation)"},
+        {"crop": "धान / मक्का (Paddy / Maize)", "rev_per_ha": 86000, "duration": 5, "impact": "उच्च मानसून पैदावार"},
+        {"crop": "गेहूं / सरसों (Wheat / Mustard)", "rev_per_ha": 82000, "duration": 4, "impact": "रबी सीजन उच्च बाजार मूल्य"},
+        {"crop": "सूरजमुखी / सब्जियां (Sunflower / Vegetables)", "rev_per_ha": 45000, "duration": 3, "impact": "त्वरित नकद आय एवं नमी संरक्षण"}
+    ]
+    
+    pool_idx = 0
+    while remaining_months > 0:
+        rot = rotation_pool[pool_idx % len(rotation_pool)]
+        duration = min(rot["duration"], remaining_months)
+        end_month_idx = (current_month_cursor + duration) % 12
+        year_num = ((total_months - remaining_months) // 12) + 1
+        
+        cycle_rev = round(area_hectares * rot["rev_per_ha"] * (1 + (year_num * 0.03)), 2)
+        
+        succession_cycles.append({
+            "cycle_number": cycle_counter,
+            "year": year_num,
+            "period": f"वर्ष {year_num} - {MONTH_NAMES[current_month_cursor]} से {MONTH_NAMES[end_month_idx]}",
+            "crop": rot["crop"],
+            "duration_months": duration,
+            "harvest_month": MONTH_NAMES[end_month_idx],
+            "estimated_revenue_rs": cycle_rev,
+            "soil_impact": rot["impact"],
+            "status": f"अनुशंसित फसल उत्तराधिकार #{cycle_counter - 1}"
+        })
+        
+        remaining_months -= duration
+        current_month_cursor = end_month_idx
+        pool_idx += 1
+        cycle_counter += 1
 
-    total_1year_revenue = sum(c["estimated_revenue_rs"] for c in succession_cycles)
-    one_year_loan_limit = round(total_1year_revenue * 0.60, 2)
+    total_combined_revenue = sum(c["estimated_revenue_rs"] for c in succession_cycles)
+    # Safe loan eligibility cap based on multi-year loan tenure
+    safe_loan_cap = round(total_combined_revenue * 0.55, 2)
 
     return {
-        "loan_tenure_months": 12,
+        "loan_tenure_years": loan_tenure_years,
+        "total_loan_months": total_months,
+        "start_month": MONTH_NAMES[start_month_index],
+        "current_crop_duration_months": current_crop_duration,
         "succession_cycles": succession_cycles,
-        "total_1year_combined_revenue_rs": round(total_1year_revenue, 2),
-        "one_year_loan_eligibility_cap_rs": one_year_loan_limit,
-        "repayment_capacity_score": "उत्कृष्ट (High Repayment Capacity)" if total_1year_revenue > 200000 else "सामान्य"
+        "total_annual_combined_revenue_rs": round(total_combined_revenue, 2),
+        "one_year_loan_eligibility_cap_rs": safe_loan_cap,
+        "repayment_capacity_score": "उच्च (High Repayment Capacity)" if safe_loan_cap > 150000 else "सामान्य"
     }
