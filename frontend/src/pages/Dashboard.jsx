@@ -63,7 +63,7 @@ const Dashboard = () => {
     state: 'Maharashtra',
     district: 'Ahilyanagar',
     crop: 'Wheat',
-    areaHectares: 2.5,
+    areaHectares: 3.37,
     loanTenureYears: 1,
     startMonthIndex: 10, // November
     cropDurationMonths: 4
@@ -83,18 +83,24 @@ const Dashboard = () => {
     }));
   };
 
+  // Instant pre-computed estimation calculation for live context sync
+  const areaHa = parseFloat(formState.areaHectares) || 2.5;
+  const estBaseRev = areaHa * 3.5 * 10 * 2275;
+  const estCombinedRev = estBaseRev * 2.2;
+  const estSafeLoanCap = Math.round(estCombinedRev * 0.60);
+
   // Construct Dynamic Welcome Message that SYNCs automatically with Form Inputs
   const getDynamicWelcomeMessage = () => {
     const monthName = MONTHS_LIST[formState.startMonthIndex]?.[lang] || 'November';
     if (lang === 'en') {
       return {
         role: 'assistant',
-        content: `Hello! 🙏 I am KrishiAI. I see you selected **${formState.crop}** on **${formState.areaHectares} Hectares** in **${formState.district}, ${formState.state}**, sown in **${monthName}** for a **${formState.loanTenureYears}-Year** loan tenure. Click "Analyze Selected Farmland" on the map or ask me any question about your loan limit!`
+        content: `Hello! 🙏 I am KrishiAI. Based on your land details (**${formState.crop}**, **${formState.areaHectares} Ha** in **${formState.district}, ${formState.state}**), **you are eligible for a loan amount of ₹${estSafeLoanCap.toLocaleString('en-IN')}**.`
       };
     }
     return {
       role: 'assistant',
-      content: `नमस्ते! 🙏 मैं किसानAI हूँ। मैं देख सकता हूँ कि आपने **${formState.district}, ${formState.state}** में **${formState.areaHectares} हेक्टेयर** पर **${formState.crop}** फसल, बुआई **${monthName}**, और **${formState.loanTenureYears}-वर्षीय** ऋण चुना है। नक्शे पर "इस भूमि का विश्लेषण करें" दबाएं या मुझसे कोई भी सवाल पूछें!`
+      content: `नमस्ते! 🙏 मैं किसानAI हूँ। आपके भूमि विवरण (**${formState.crop}**, **${formState.areaHectares} हेक्टेयर** - **${formState.district}, ${formState.state}**) के अनुसार, **आप ₹${estSafeLoanCap.toLocaleString('en-IN')} की ऋण राशि के लिए पात्र हैं (You are eligible for loan amount ₹${estSafeLoanCap.toLocaleString('en-IN')})।**`
     };
   };
 
@@ -107,7 +113,6 @@ const Dashboard = () => {
   // Synchronize AI Chat Welcome Message when form inputs or language change
   useEffect(() => {
     setMessages(prev => {
-      // Replace opening welcome message with synced version
       const updated = [...prev];
       updated[0] = getDynamicWelcomeMessage();
       return updated;
@@ -153,8 +158,8 @@ const Dashboard = () => {
       const loanCap = pred?.suggested_loan_limit_rs;
 
       const summaryMsg = lang === 'en'
-        ? `🌾 **Maximum Loan Amount You Can Receive: ₹${Math.round(loanCap).toLocaleString('en-IN')}**\n\n1. Current ${formState.crop} Income: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. Total Combined Income (${formState.loanTenureYears} Years): ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. Harvest Month: ${MONTHS_LIST[(formState.startMonthIndex + formState.cropDurationMonths) % 12].en}\n\nWould you like assistance with PM Fasal Bima crop insurance or SBI/NABARD KCC loan application?`
-        : `🌾 **आपकी स्वीकार्य अधिकतम ऋण राशि: ₹${Math.round(loanCap).toLocaleString('en-IN')}**\n\n1. वर्तमान ${formState.crop} फसल आय: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. ${formState.loanTenureYears}-वर्षीय कुल संयुक्त आय: ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. कटाई का महीना: ${MONTHS_LIST[(formState.startMonthIndex + formState.cropDurationMonths) % 12].hi}\n\nक्या आप पीएम फसल बीमा योजना या स्टेट बैंक/नाबार्ड केसीसी ऋण आवेदन में सहायता चाहते हैं?`;
+        ? `🌾 **You are eligible for a loan amount of ₹${Math.round(loanCap).toLocaleString('en-IN')}**\n\n1. Current ${formState.crop} Income: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. Total Combined Income (${formState.loanTenureYears} Years): ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. Harvest Month: ${MONTHS_LIST[(formState.startMonthIndex + formState.cropDurationMonths) % 12].en}\n\nWould you like assistance with PM Fasal Bima crop insurance or SBI/NABARD KCC loan application?`
+        : `🌾 **आप ₹${Math.round(loanCap).toLocaleString('en-IN')} की ऋण राशि के लिए पात्र हैं (You are eligible for loan amount ₹${Math.round(loanCap).toLocaleString('en-IN')})**\n\n1. वर्तमान ${formState.crop} फसल आय: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. ${formState.loanTenureYears}-वर्षीय कुल संयुक्त आय: ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. कटाई का महीना: ${MONTHS_LIST[(formState.startMonthIndex + formState.cropDurationMonths) % 12].hi}\n\nक्या आप पीएम फसल बीमा योजना या स्टेट बैंक/नाबार्ड केसीसी ऋण आवेदन में सहायता चाहते हैं?`;
 
       setMessages(prev => [...prev, { role: 'assistant', content: summaryMsg }]);
     } catch (err) {
@@ -164,7 +169,7 @@ const Dashboard = () => {
     }
   };
 
-  // Chat send handler with Live Form Data Payload
+  // Chat send handler with Live Form Data & Loan Computation Payload
   const handleSendChat = async (e) => {
     e.preventDefault();
     if (!input.trim() || loadingChat) return;
@@ -176,23 +181,33 @@ const Dashboard = () => {
 
     try {
       const token = user?.token || localStorage.getItem('token');
+
+      // Always send verified inputs + calculated loan limits so AI never asks again
+      const payloadContext = analysisData || {
+        inputs: {
+          state: formState.state,
+          district: formState.district,
+          crop: formState.crop,
+          area_hectares: formState.areaHectares,
+        },
+        predictions: {
+          adjusted_estimated_revenue_rs: Math.round(estBaseRev),
+          total_1year_combined_revenue_rs: Math.round(estCombinedRev),
+          suggested_loan_limit_rs: estSafeLoanCap,
+          risk_level: 'Medium'
+        },
+        one_year_succession_plan: {
+          loan_tenure_years: formState.loanTenureYears,
+          start_month: MONTHS_LIST[formState.startMonthIndex].en
+        }
+      };
+
       const res = await axios.post(
         `${API_URL}/ai/chat`,
         {
           message: userMessage,
           chatId,
-          landContext: analysisData || {
-            inputs: {
-              state: formState.state,
-              district: formState.district,
-              crop: formState.crop,
-              area_hectares: formState.areaHectares,
-            },
-            one_year_succession_plan: {
-              loan_tenure_years: formState.loanTenureYears,
-              start_month: MONTHS_LIST[formState.startMonthIndex].en
-            }
-          },
+          landContext: payloadContext,
           lang: lang
         },
         { headers: { Authorization: `Bearer ${token}` } }
