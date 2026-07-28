@@ -4,6 +4,7 @@ import axios from 'axios';
 import FarmlandMap from '../components/FarmlandMap';
 import LandAnalysisCard from '../components/LandAnalysisCard';
 import FinancialRevenueCard from '../components/FinancialRevenueCard';
+import CalculationBreakdown from '../components/CalculationBreakdown';
 import PDFReportButton from '../components/PDFReportButton';
 import CropRotationPlanner from '../components/CropRotationPlanner';
 import FullLandReport from '../components/FullLandReport';
@@ -31,6 +32,14 @@ const MONTHS_LIST = [
   { idx: 10, hi: 'नवंबर (November)', en: 'November' },
   { idx: 11, hi: 'दिसंबर (December)', en: 'December' },
 ];
+
+const AUTO_CROP_DURATIONS = {
+  Wheat: 4,
+  Rice: 5,
+  Cotton: 6,
+  Sugarcane: 12,
+  Maize: 3
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -64,12 +73,22 @@ const Dashboard = () => {
   const [analysisData, setAnalysisData] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
 
+  // Auto update crop duration when crop changes
+  const handleCropChange = (newCrop) => {
+    const autoDur = AUTO_CROP_DURATIONS[newCrop] || 4;
+    setFormState(prev => ({
+      ...prev,
+      crop: newCrop,
+      cropDurationMonths: autoDur
+    }));
+  };
+
   // Chat states
   const welcomeMessage = {
     role: 'assistant',
     content: lang === 'en'
-      ? 'Hello! 🙏 I am KrishiAI. When you select your farmland on the map, I will analyze your multi-year crop succession plan and loan eligibility.'
-      : 'नमस्ते! 🙏 मैं किसानAI हूँ। जब आप अपनी जमीन का चयन करते हैं, तो मैं आपकी फसल एवं चुनी हुई ऋण अवधि (1-5 वर्ष) के अनुसार संपूर्ण फसल चक्र व आय का विश्लेषण प्रस्तुत कर सकता हूँ।'
+      ? 'Hello! 🙏 I am KrishiAI. When you select your farmland on the map, I will instantly analyze your multi-year crop yield, weather risks, and tell you the exact maximum loan amount you can receive.'
+      : 'नमस्ते! 🙏 मैं किसानAI हूँ। जब आप अपनी जमीन का चयन करते हैं, तो मैं आपकी फसल एवं चुनी हुई ऋण अवधि (1-5 वर्ष) के अनुसार स्वीकार्य अधिकतम ऋण राशि और फसल चक्र प्रस्तुत करूँगा।'
   };
 
   const [messages, setMessages] = useState([welcomeMessage]);
@@ -117,8 +136,8 @@ const Dashboard = () => {
       const loanCap = pred?.suggested_loan_limit_rs;
 
       const summaryMsg = lang === 'en'
-        ? `🌾 **${formState.loanTenureYears}-Year Loan Analysis Complete!**\n\n1. Current ${formState.crop} Income: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. Total Combined Income (${formState.loanTenureYears} Years): ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. Recommended Loan Limit: ₹${Math.round(loanCap).toLocaleString('en-IN')}\n\nSowing starts in ${MONTHS_LIST[formState.startMonthIndex].en}. Would you like to discuss the loan terms?`
-        : `🌾 **${formState.loanTenureYears}-वर्षीय ऋण व फसल उत्तराधिकार विश्लेषण पूर्ण हुआ!**\n\n1. वर्तमान ${formState.crop} फसल आय: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. ${formState.loanTenureYears}-वर्षीय कुल संयुक्त आय: ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. अनुशंसित सुरक्षित ऋण सीमा: ₹${Math.round(loanCap).toLocaleString('en-IN')}\n\nबुआई ${MONTHS_LIST[formState.startMonthIndex].hi} से शुरू होगी। क्या आप और जानकारी चाहते हैं?`;
+        ? `🌾 **Maximum Loan Amount You Can Receive: ₹${Math.round(loanCap).toLocaleString('en-IN')}**\n\n1. Current ${formState.crop} Income: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. Total Combined Income (${formState.loanTenureYears} Years): ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. Crop Duration: ${formState.cropDurationMonths} Months (Harvest in ${MONTHS_LIST[(formState.startMonthIndex + formState.cropDurationMonths) % 12].en})\n\nWould you like assistance with your bank loan application?`
+        : `🌾 **आपकी स्वीकार्य अधिकतम ऋण राशि: ₹${Math.round(loanCap).toLocaleString('en-IN')}**\n\n1. वर्तमान ${formState.crop} फसल आय: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. ${formState.loanTenureYears}-वर्षीय कुल संयुक्त आय: ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. फसल अवधि: ${formState.cropDurationMonths} महीने (कटाई: ${MONTHS_LIST[(formState.startMonthIndex + formState.cropDurationMonths) % 12].hi})\n\nक्या आप बैंक ऋण प्रक्रिया में सहायता चाहते हैं?`;
 
       setMessages(prev => [...prev, { role: 'assistant', content: summaryMsg }]);
     } catch (err) {
@@ -230,7 +249,8 @@ const Dashboard = () => {
             <span className="text-xs text-gray-500">{t.step1}</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Simplified 3-Question Agricultural Inputs */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">{t.state}</label>
               <input
@@ -249,20 +269,55 @@ const Dashboard = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:border-[#E8630A] focus:outline-none"
               />
             </div>
+
+            {/* Q1: What Crop? */}
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">{t.crop}</label>
+              <label className="block text-xs font-bold text-[#E8630A] mb-1">1. कौन सी फसल? (What Crop?)</label>
               <select
                 value={formState.crop}
-                onChange={e => setFormState({ ...formState, crop: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:border-[#E8630A] focus:outline-none"
+                onChange={e => handleCropChange(e.target.value)}
+                className="w-full px-3 py-2 border-2 border-[#E8630A]/40 rounded-xl text-sm font-bold text-[#3D2C1E] focus:border-[#E8630A] focus:outline-none"
               >
-                <option value="Wheat">{t.wheat}</option>
-                <option value="Rice">{t.rice}</option>
-                <option value="Cotton">{t.cotton}</option>
-                <option value="Sugarcane">{t.sugarcane}</option>
-                <option value="Maize">{t.maize}</option>
+                <option value="Wheat">{t.wheat} (4 Months)</option>
+                <option value="Rice">{t.rice} (5 Months)</option>
+                <option value="Cotton">{t.cotton} (6 Months)</option>
+                <option value="Sugarcane">{t.sugarcane} (12 Months)</option>
+                <option value="Maize">{t.maize} (3 Months)</option>
               </select>
             </div>
+
+            {/* Q2: When Planted? */}
+            <div>
+              <label className="block text-xs font-bold text-[#2D6A4F] mb-1">2. बुआई कब की? (When Planted?)</label>
+              <select
+                value={formState.startMonthIndex}
+                onChange={e => setFormState({ ...formState, startMonthIndex: parseInt(e.target.value) })}
+                className="w-full px-3 py-2 border-2 border-[#2D6A4F]/40 rounded-xl text-sm font-bold text-[#3D2C1E] focus:border-[#2D6A4F] focus:outline-none"
+              >
+                {MONTHS_LIST.map(m => (
+                  <option key={m.idx} value={m.idx}>
+                    {lang === 'en' ? m.en : m.hi}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Q3: Loan Till When? */}
+            <div>
+              <label className="block text-xs font-bold text-[#E8630A] mb-1">3. कितना ऋण? (Loan Tenure)</label>
+              <select
+                value={formState.loanTenureYears}
+                onChange={e => setFormState({ ...formState, loanTenureYears: parseInt(e.target.value) })}
+                className="w-full px-3 py-2 border-2 border-[#E8630A] bg-orange-50/50 rounded-xl text-sm font-bold text-[#E8630A] focus:outline-none"
+              >
+                <option value={1}>{t.oneYear}</option>
+                <option value={2}>{t.twoYears}</option>
+                <option value={3}>{t.threeYears}</option>
+                <option value={5}>{t.fiveYears}</option>
+              </select>
+            </div>
+
+            {/* Auto Calculated Land Area */}
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">
                 {t.areaHectares} <span className="text-[10px] text-[#2D6A4F]">({t.calculatedFromMap})</span>
@@ -274,50 +329,6 @@ const Dashboard = () => {
                 onChange={e => setFormState({ ...formState, areaHectares: e.target.value })}
                 className="w-full px-3 py-2 border border-[#2D6A4F] bg-green-50/50 rounded-xl text-sm font-bold text-[#2D6A4F] focus:outline-none"
               />
-            </div>
-
-            {/* Additional Inputs for Sowing Month, Duration, & Loan Tenure */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">{t.startMonth}</label>
-              <select
-                value={formState.startMonthIndex}
-                onChange={e => setFormState({ ...formState, startMonthIndex: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:border-[#E8630A] focus:outline-none"
-              >
-                {MONTHS_LIST.map(m => (
-                  <option key={m.idx} value={m.idx}>
-                    {lang === 'en' ? m.en : m.hi}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">{t.cropDuration}</label>
-              <select
-                value={formState.cropDurationMonths}
-                onChange={e => setFormState({ ...formState, cropDurationMonths: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:border-[#E8630A] focus:outline-none"
-              >
-                <option value={3}>3 {t.months}</option>
-                <option value={4}>4 {t.months}</option>
-                <option value={5}>5 {t.months}</option>
-                <option value={6}>6 {t.months}</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">{t.loanTenure}</label>
-              <select
-                value={formState.loanTenureYears}
-                onChange={e => setFormState({ ...formState, loanTenureYears: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 border border-[#E8630A] bg-orange-50/50 rounded-xl text-sm font-bold text-[#E8630A] focus:outline-none"
-              >
-                <option value={1}>{t.oneYear}</option>
-                <option value={2}>{t.twoYears}</option>
-                <option value={3}>{t.threeYears}</option>
-                <option value={5}>{t.fiveYears}</option>
-              </select>
             </div>
           </div>
         </div>
@@ -349,7 +360,16 @@ const Dashboard = () => {
         {/* Step 3: Land & Climate Analysis Card */}
         {analysisData && <LandAnalysisCard analysis={analysisData} t={t} />}
 
-        {/* Step 4: Multi-Year Crop Succession & Loan Timeline Report */}
+        {/* Step 4: Step-by-Step Mathematical Calculation Breakdown Card */}
+        {analysisData && (
+          <CalculationBreakdown
+            analysisData={analysisData}
+            formState={formState}
+            t={t}
+          />
+        )}
+
+        {/* Step 5: Multi-Year Crop Succession & Loan Timeline Report */}
         {analysisData && (
           <FullLandReport
             analysisData={analysisData}
@@ -358,7 +378,7 @@ const Dashboard = () => {
           />
         )}
 
-        {/* Step 5: Financial Revenue & Safe Credit Cap Card */}
+        {/* Step 6: Financial Revenue & Safe Credit Cap Card */}
         {analysisData && (
           <FinancialRevenueCard
             predictions={analysisData.predictions}
@@ -367,7 +387,7 @@ const Dashboard = () => {
           />
         )}
 
-        {/* Step 6: PDF Report Button & Crop Rotation Planner */}
+        {/* Step 7: PDF Report Button & Crop Rotation Planner */}
         {analysisData && (
           <div className="flex justify-center pt-2">
             <PDFReportButton
@@ -381,7 +401,7 @@ const Dashboard = () => {
 
         <CropRotationPlanner areaHectares={parseFloat(formState.areaHectares) || 2.5} t={t} />
 
-        {/* Step 7: Embedded AI Chat Assistant on Main Dashboard */}
+        {/* Step 8: Embedded AI Chat Assistant on Main Dashboard */}
         <div className="bg-white rounded-2xl shadow-xl border border-[#E8630A]/20 h-[520px] flex flex-col overflow-hidden">
           <div className="p-4 bg-[#2D6A4F] text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -423,13 +443,13 @@ const Dashboard = () => {
           </div>
 
           {/* Input Bar */}
-          <form onSubmit={handleSendChat} className="p-3 bg-white border-t flex gap-2">
+          <form onSubmit={handleSendChat} className="p-3 bg-[#FFF8F0] border-t flex gap-2">
             <input
               type="text"
               value={input}
               onChange={e => setInput(e.target.value)}
               placeholder={t.chatPlaceholder}
-              className="flex-1 px-4 py-3 bg-[#FFF8F0] border rounded-xl text-sm focus:outline-none focus:border-[#E8630A]"
+              className="flex-1 px-4 py-3 bg-white border border-[#E8630A]/20 rounded-xl text-sm focus:outline-none focus:border-[#E8630A]"
             />
             <button
               type="submit"

@@ -4,18 +4,38 @@ MONTH_NAMES = [
     "सितंबर (September)", "अक्टूबर (October)", "नवंबर (November)", "दिसंबर (December)"
 ]
 
+# Standard agronomic growing durations (in Months)
+DEFAULT_CROP_DURATIONS = {
+    "wheat": 4,      # ~120 days
+    "rice": 5,       # ~150 days
+    "cotton": 6,     # ~180 days
+    "sugarcane": 12, # ~365 days
+    "maize": 3       # ~90 days
+}
+
+def get_default_crop_duration(crop_name: str) -> int:
+    """Returns the standard agronomic growing duration for a crop."""
+    crop_lower = crop_name.lower().strip()
+    for key, duration in DEFAULT_CROP_DURATIONS.items():
+        if key in crop_lower:
+            return duration
+    return 4  # Default fallback 4 months
+
 def get_multiyear_crop_succession_plan(
     current_crop: str, 
     area_hectares: float, 
     current_crop_revenue: float,
     loan_tenure_years: int = 1,
-    start_month_index: int = 10, # default November (0-indexed 10)
-    current_crop_duration: int = 4
+    start_month_index: int = 10, # default November
+    current_crop_duration: int = None
 ):
     """
-    Calculates a multi-year (1, 2, 3, or 5 Year) crop succession and revenue plan.
-    Takes into account the exact sowing start month and current crop duration.
+    Calculates a multi-year crop succession plan for loan tenure (1, 2, 3, or 5 Years).
+    Automatically looks up crop duration if not explicitly provided.
     """
+    if not current_crop_duration or current_crop_duration <= 0:
+        current_crop_duration = get_default_crop_duration(current_crop)
+
     total_months = loan_tenure_years * 12
     crop_lower = current_crop.lower()
     
@@ -41,7 +61,7 @@ def get_multiyear_crop_succession_plan(
     current_month_cursor = first_harvest_month_idx
     cycle_counter = 2
     
-    # Succession Pool based on crop rotation science
+    # Rotation pool based on crop science
     rotation_pool = [
         {"crop": "मूंग दलहन (Mung Bean / Pulses)", "rev_per_ha": 38000, "duration": 3, "impact": "मिट्टी में नाइट्रोजन निर्धारण (N-Fixation)"},
         {"crop": "धान / मक्का (Paddy / Maize)", "rev_per_ha": 86000, "duration": 5, "impact": "उच्च मानसून पैदावार"},
@@ -76,8 +96,8 @@ def get_multiyear_crop_succession_plan(
         cycle_counter += 1
 
     total_combined_revenue = sum(c["estimated_revenue_rs"] for c in succession_cycles)
-    # Safe loan eligibility cap based on multi-year loan tenure
-    safe_loan_cap = round(total_combined_revenue * 0.55, 2)
+    # Safe loan eligibility cap based on 60% safe repayment capacity
+    safe_loan_cap = round(total_combined_revenue * 0.60, 2)
 
     return {
         "loan_tenure_years": loan_tenure_years,

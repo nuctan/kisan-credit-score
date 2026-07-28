@@ -66,28 +66,45 @@ exports.chatWithAI = async (req, res) => {
     // Dynamic Language Prompt & Context Injection
     const isEnglish = lang === 'en';
     let dynamicSystemPrompt = isEnglish
-      ? `You are KrishiAI — an Agricultural Risk & Credit Assessment Assistant. Help farmers evaluate crop revenue, land health, weather risks, and loan repayment capacity. Respond clearly in English.`
-      : SYSTEM_PROMPT;
+      ? `You are KrishiAI — an expert Agricultural Risk & Credit Assessment Assistant for Indian Farmers. 
+      Your task is to clearly explain loan eligibility limits, crop yield predictions, weather risks, and crop succession strategies.
+      Always state the exact maximum loan eligibility amount in your first line when land data is available.`
+      : `आप किसानAI हैं — एक विशेषज्ञ कृषि ऋण मूल्यांकन सहायक। आपका काम किसानों को उनकी फसल की पैदावार, ऋण पात्रता राशि और फसल उत्तराधिकार योजना के बारे में विस्तार से समझाना है।
+      जब जमीन का विश्लेषण उपलब्ध हो, तो अपनी पहली पंक्ति में ही किसान को उनकी स्वीकार्य अधिकतम ऋण राशि (₹) स्पष्ट रूप से बताएं।`;
 
     if (landContext) {
+      const pred = landContext.predictions || {};
+      const scores = landContext.ai_scores || {};
+      const plan = landContext.one_year_succession_plan || {};
+
       if (isEnglish) {
-        dynamicSystemPrompt += `\n\n[SYSTEM DATA]: Farmland telemetry analysis received. 
-        Current Crop Revenue: ₹${landContext.predictions?.adjusted_estimated_revenue_rs || 'N/A'}
-        1-Year Total Combined Revenue: ₹${landContext.predictions?.total_1year_combined_revenue_rs || 'N/A'}
-        Recommended 1-Year Loan Cap (60% Rule): ₹${landContext.predictions?.suggested_loan_limit_rs || 'N/A'}
-        Risk Level: ${landContext.predictions?.risk_level || 'N/A'}
-        NDVI Score: ${landContext.ai_scores?.ndvi?.score || 'N/A'}
-        IMD Weather: ${landContext.ai_scores?.weather?.description || 'N/A'}. 
-        Use this data to advise the farmer on their loan capacity and crop succession strategy.`;
+        dynamicSystemPrompt += `\n\n[SYSTEM DATA - FARMLAND TELEMETRY]:
+        - Current Crop Revenue: ₹${pred.adjusted_estimated_revenue_rs || 'N/A'}
+        - Loan Tenure: ${plan.loan_tenure_years || 1} Year(s)
+        - Total Loan Tenure Combined Revenue: ₹${pred.total_1year_combined_revenue_rs || 'N/A'}
+        - MAXIMUM SAFE LOAN ELIGIBILITY CAP (60% Rule): ₹${pred.suggested_loan_limit_rs || 'N/A'}
+        - Risk Level: ${pred.risk_level || 'Medium'}
+        - NDVI Vegetation Score: ${scores.ndvi?.score || 'N/A'}
+        - IMD Weather: ${scores.weather?.description || 'N/A'}
+        
+        INSTRUCTIONS FOR YOUR RESPONSE:
+        1. Begin immediately by stating: "Maximum Loan Amount You Can Receive: ₹${pred.suggested_loan_limit_rs?.toLocaleString('en-IN') || 'N/A'}"
+        2. Explain the month-by-month crop succession strategy (e.g. Sowing in ${plan.start_month || 'November'}, harvest month, and succession crops).
+        3. Answer any questions the farmer has about repayment or weather risks politely and clearly.`;
       } else {
-        dynamicSystemPrompt += `\n\n[सिस्टम अपडेट]: किसान ने अपनी जमीन का डेटा प्रदान किया है। 
-        वर्तमान फसल आय: ₹${landContext.predictions?.adjusted_estimated_revenue_rs || 'N/A'}
-        1-वर्षीय कुल संयुक्त आय: ₹${landContext.predictions?.total_1year_combined_revenue_rs || 'N/A'}
-        सुरक्षित ऋण सीमा (60% नियम): ₹${landContext.predictions?.suggested_loan_limit_rs || 'N/A'}
-        जोखिम स्तर: ${landContext.predictions?.risk_level || 'N/A'}
-        NDVI स्कोर: ${landContext.ai_scores?.ndvi?.score || 'N/A'}
-        मौसम: ${landContext.ai_scores?.weather?.description || 'N/A'}
-        इस डेटा का उपयोग करके किसान को फसल उत्तराधिकार एवं ऋण स्वीकृति पर सलाह दें।`;
+        dynamicSystemPrompt += `\n\n[सिस्टम डेटा - भूमि व सैटेलाइट विश्लेषण]:
+        - वर्तमान फसल आय: ₹${pred.adjusted_estimated_revenue_rs || 'N/A'}
+        - ऋण अवधि: ${plan.loan_tenure_years || 1} वर्ष
+        - कुल ऋण अवधि संयुक्त आय: ₹${pred.total_1year_combined_revenue_rs || 'N/A'}
+        - स्वीकार्य अधिकतम सुरक्षित ऋण राशि (60% नियम): ₹${pred.suggested_loan_limit_rs || 'N/A'}
+        - जोखिम स्तर: ${pred.risk_level || 'मध्यम'}
+        - NDVI वनस्पति स्वास्थ्य: ${scores.ndvi?.score || 'N/A'}
+        - IMD मौसम: ${scores.weather?.description || 'N/A'}
+        
+        उत्तर देने के लिए निर्देश:
+        1. अपनी बात तुरंत इस प्रकार शुरू करें: "आपकी स्वीकार्य अधिकतम ऋण राशि: ₹${pred.suggested_loan_limit_rs?.toLocaleString('en-IN') || 'N/A'}"
+        2. किसान को महीने-दर-महीने कटाई और उत्तराधिकार फसल योजना (${plan.start_month || 'नवंबर'} से बुआई, कटाई महीना व अगली फसल) समझाएं।
+        3. किसान के हर सवाल का जवाब विनम्रता और स्पष्टता से दें।`;
       }
     }
 
