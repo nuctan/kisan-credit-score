@@ -81,15 +81,8 @@ const FarmlandMap = ({ selectedPos, setSelectedPos, onConfirmSelection, onAreaCh
   const [pos, setPos] = useState(selectedPos || [19.0958, 74.7496]);
   const [mapType, setMapType] = useState('satellite');
   
-  // Default 4-point polygon box centered around selected position (~2.5 Ha)
-  const defaultPoly = [
-    [pos[0] + 0.0012, pos[1] - 0.0012],
-    [pos[0] + 0.0012, pos[1] + 0.0012],
-    [pos[0] - 0.0012, pos[1] + 0.0012],
-    [pos[0] - 0.0012, pos[1] - 0.0012]
-  ];
-
-  const [polygonPoints, setPolygonPoints] = useState(defaultPoly);
+  // Start with empty polygon points so farmer can draw their actual farm boundary
+  const [polygonPoints, setPolygonPoints] = useState([]);
 
   useEffect(() => {
     if (selectedPos) setPos(selectedPos);
@@ -97,7 +90,7 @@ const FarmlandMap = ({ selectedPos, setSelectedPos, onConfirmSelection, onAreaCh
 
   // Calculate polygon area in SqMeters, Hectares, and Bigha
   const areaSqMeters = computePolygonAreaSqMeters(polygonPoints);
-  const calculatedHectares = areaSqMeters > 0 ? (areaSqMeters / 10000).toFixed(2) : '2.50';
+  const calculatedHectares = areaSqMeters > 0 ? (areaSqMeters / 10000).toFixed(2) : (areaHectares || '0.00');
   const calculatedBigha = (parseFloat(calculatedHectares) * 3.95).toFixed(2);
 
   useEffect(() => {
@@ -144,6 +137,14 @@ const FarmlandMap = ({ selectedPos, setSelectedPos, onConfirmSelection, onAreaCh
           </div>
         </div>
       </div>
+
+      {/* Instruction Banner when no polygon is drawn */}
+      {polygonPoints.length < 3 && (
+        <div className="absolute top-16 left-1/2 transform -translate-x-1/2 z-[1000] bg-[#E8630A] text-white px-4 py-2 rounded-full shadow-lg text-xs font-bold animate-bounce flex items-center gap-2 pointer-events-none">
+          <span>👇</span>
+          <span>{lang === 'en' ? 'Click 3 or 4 points on the map to draw your field boundary!' : 'खेत की सीमा बनाने के लिए मानचित्र पर 3-4 स्थानों पर क्लिक करें!'}</span>
+        </div>
+      )}
 
       {/* Top Right Controls */}
       <div className="absolute top-3 right-3 z-[1000] flex gap-2">
