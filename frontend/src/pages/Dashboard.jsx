@@ -8,6 +8,8 @@ import CalculationBreakdown from '../components/CalculationBreakdown';
 import PDFReportButton from '../components/PDFReportButton';
 import CropRotationPlanner from '../components/CropRotationPlanner';
 import FullLandReport from '../components/FullLandReport';
+import SatelliteTrendChart from '../components/SatelliteTrendChart';
+import KisanSchemesCard from '../components/KisanSchemesCard';
 import { translations } from '../utils/translations';
 import { INDIA_STATES_DISTRICTS } from '../utils/indiaDistricts';
 
@@ -112,12 +114,12 @@ const Dashboard = () => {
     if (lang === 'en') {
       return {
         role: 'assistant',
-        content: `Hello! 🙏 I am KrishiAI. Based on your land details (${formState.crop}, ${formState.areaHectares} Ha in ${formState.district}, ${formState.state} sown in ${monthName}), you are eligible for a loan amount of ₹${estSafeLoanCap.toLocaleString('en-IN')}. Next crop sowing is recommended in 1st week of ${nextSowMonthName}.`
+        content: `Hello! 🙏 I am KrishiAI. Based on your land details (${formState.crop}, ${formState.areaHectares} Ha in ${formState.district}, ${formState.state} sown in ${monthName}), you are eligible for a loan amount of ₹${estSafeLoanCap.toLocaleString('en-IN')}. Next crop sowing is recommended in 1st week of ${nextSowMonthName}. Ask me about PM-Kisan, KCC, or solar pump subsidies!`
       };
     }
     return {
       role: 'assistant',
-      content: `नमस्ते! 🙏 मैं किसानAI हूँ। आपके भूमि विवरण (${formState.crop}, ${formState.areaHectares} हेक्टेयर - ${formState.district}, ${formState.state}, बुआई: ${monthName}) के अनुसार, आप ₹${estSafeLoanCap.toLocaleString('en-IN')} की ऋण राशि के लिए पात्र हैं। अगली फसल बुआई ${nextSowMonthName} के पहले सप्ताह में अनुशंसित है।`
+      content: `नमस्ते! 🙏 मैं किसानAI हूँ। आपके भूमि विवरण (${formState.crop}, ${formState.areaHectares} हेक्टेयर - ${formState.district}, ${formState.state}, बुआई: ${monthName}) के अनुसार, आप ₹${estSafeLoanCap.toLocaleString('en-IN')} की ऋण राशि के लिए पात्र हैं। अगली फसल बुआई ${nextSowMonthName} के पहले सप्ताह में अनुशंसित है। आप मुझसे पीएम-किसान, केसीसी ऋण या सोलर पंप सब्सिडी के बारे में भी पूछ सकते हैं!`
     };
   };
 
@@ -172,8 +174,8 @@ const Dashboard = () => {
       const nextDecision = res.data.one_year_succession_plan?.next_crop_decision;
 
       const summaryMsg = lang === 'en'
-        ? `🌾 You are eligible for a loan amount of ₹${Math.round(loanCap).toLocaleString('en-IN')}\n\n1. Current ${formState.crop} Income: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. Total Combined Income (${formState.loanTenureYears} Years): ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. Current Crop Harvest: ${MONTHS_LIST[harvestMonthIdx].en}\n4. Recommended Next Crop Sowing Date: ${nextDecision?.recommended_next_sow_date || `1st Week of ${MONTHS_LIST[harvestMonthIdx].en}`} (${nextDecision?.recommended_next_crop || 'Summer Mung Bean'})\n\nWould you like assistance with PM Fasal Bima crop insurance or SBI/NABARD KCC loan application?`
-        : `🌾 आप ₹${Math.round(loanCap).toLocaleString('en-IN')} की ऋण राशि के लिए पात्र हैं\n\n1. वर्तमान ${formState.crop} फसल आय: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. ${formState.loanTenureYears}-वर्षीय कुल संयुक्त आय: ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. कटाई का महीना: ${MONTHS_LIST[harvestMonthIdx].hi}\n4. अनुशंसित अगली फसल बुआई तिथि: ${nextDecision?.recommended_next_sow_date || `${MONTHS_LIST[harvestMonthIdx].hi} का पहला सप्ताह`} (${nextDecision?.recommended_next_crop || 'ग्रीष्मकालीन मूंग दलहन'})\n\nक्या आप पीएम फसल बीमा योजना या स्टेट बैंक/नाबार्ड केसीसी ऋण आवेदन में सहायता चाहते हैं?`;
+        ? `🌾 You are eligible for a loan amount of ₹${Math.round(loanCap).toLocaleString('en-IN')}\n\n1. Current ${formState.crop} Income: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. Total Combined Income (${formState.loanTenureYears} Years): ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. Current Crop Harvest: ${MONTHS_LIST[harvestMonthIdx].en}\n4. Recommended Next Crop Sowing Date: ${nextDecision?.recommended_next_sow_date || `1st Week of ${MONTHS_LIST[harvestMonthIdx].en}`} (${nextDecision?.recommended_next_crop || 'Summer Mung Bean'})\n\nWould you like assistance with PM Fasal Bima crop insurance, PM-Kisan, or SBI/NABARD KCC loan application?`
+        : `🌾 आप ₹${Math.round(loanCap).toLocaleString('en-IN')} की ऋण राशि के लिए पात्र हैं\n\n1. वर्तमान ${formState.crop} फसल आय: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. ${formState.loanTenureYears}-वर्षीय कुल संयुक्त आय: ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. कटाई का महीना: ${MONTHS_LIST[harvestMonthIdx].hi}\n4. अनुशंसित अगली फसल बुआई तिथि: ${nextDecision?.recommended_next_sow_date || `${MONTHS_LIST[harvestMonthIdx].hi} का पहला सप्ताह`} (${nextDecision?.recommended_next_crop || 'ग्रीष्मकालीन मूंग दलहन'})\n\nक्या आप पीएम फसल बीमा योजना, पीएम-किसान सम्मान निधि या केसीसी ऋण आवेदन में सहायता चाहते हैं?`;
 
       setMessages(prev => [...prev, { role: 'assistant', content: summaryMsg }]);
     } catch (err) {
@@ -430,6 +432,21 @@ const Dashboard = () => {
           />
         </div>
 
+        {/* NEW FEATURE: 12-Month Satellite NDVI & Weather Trend Chart (Python Service) */}
+        <SatelliteTrendChart
+          district={formState.district}
+          crop={formState.crop}
+          t={t}
+        />
+
+        {/* NEW FEATURE: Government Kisan Schemes & Subsidies (Python RAG Engine) */}
+        <KisanSchemesCard
+          crop={formState.crop}
+          state={formState.state}
+          lang={lang}
+          t={t}
+        />
+
         {/* Step 3: Land & Climate Analysis Card */}
         {analysisData && <LandAnalysisCard analysis={analysisData} t={t} />}
 
@@ -474,14 +491,14 @@ const Dashboard = () => {
 
         <CropRotationPlanner formState={formState} areaHectares={parseFloat(formState.areaHectares) || 2.5} t={t} />
 
-        {/* Step 8: Embedded AI Chat Assistant on Main Dashboard (No Viewport Dragging) */}
+        {/* Step 8: Embedded AI Chat Assistant on Main Dashboard (Python RAG Powered) */}
         <div className="bg-white rounded-2xl shadow-xl border border-[#E8630A]/20 h-[520px] flex flex-col overflow-hidden">
           <div className="p-4 bg-[#2D6A4F] text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-2xl">🌾</span>
               <h3 className="font-bold text-lg">{t.chatHeader}</h3>
             </div>
-            <span className="text-xs bg-white/20 px-2.5 py-1 rounded-full">Groq LLaMA 3.3 Engine ({lang.toUpperCase()})</span>
+            <span className="text-xs bg-white/20 px-2.5 py-1 rounded-full">Groq LLaMA 3.3 + Python RAG ({lang.toUpperCase()})</span>
           </div>
 
           {/* Chat Body Container with Scroll Ref */}

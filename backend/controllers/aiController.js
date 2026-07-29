@@ -53,34 +53,49 @@ exports.chatWithAI = async (req, res) => {
     const fallbackLoanCap = Math.round(areaHa * 3.5 * 10 * 2275 * 2.2 * 0.60);
     const loanEligibilityAmount = pred.suggested_loan_limit_rs || fallbackLoanCap;
 
+    // Fetch RAG Kisan Schemes from Python Microservice
+    let pythonRAGContext = "";
+    try {
+      const ragRes = await axios.post('http://127.0.0.1:8000/api/kisan-schemes', {
+        query: message,
+        crop: inputs.crop || "Wheat",
+        state: inputs.state || "Maharashtra",
+        lang: lang
+      });
+      pythonRAGContext = ragRes.data.rag_prompt_summary || "";
+    } catch (e) {
+      console.warn("Python Schemes RAG fallback:", e.message);
+    }
+
     let dynamicSystemPrompt = respondInEnglish
-      ? `You are KrishiAI — an expert Agricultural Risk & Credit Assessment Assistant for Indian Farmers.
+      ? `You are KrishiAI — an expert Agricultural Risk, Credit Assessment & Government Schemes Assistant for Indian Farmers.
       Respond in clear, friendly English.
-            [CONFIRMED FARMER FORM DATA]:
-        - Crop: ${inputs.crop || 'N/A'}
-        - Location: ${inputs.district || 'N/A'}, ${inputs.state || 'N/A'}
-        - Land Area: ${inputs.area_hectares || 'N/A'} Hectares
-        - Loan Tenure: ${plan.loan_tenure_years || 1} Year(s)
-        - Sowing Month: ${plan.start_month || 'N/A'}
-        - Next Crop Sowing Decision: ${plan.next_crop_decision?.recommended_next_crop || 'Summer Mung Bean'} in ${plan.next_crop_decision?.recommended_next_sow_date || 'May First Week'}
-        
-        [ML TELEMETRY & CALCULATIONS]:
-        - Current Crop Revenue: ₹${pred.adjusted_estimated_revenue_rs || 'N/A'}
-        - Total Loan Tenure Combined Revenue: ₹${pred.total_1year_combined_revenue_rs || 'N/A'}
-        - MAXIMUM SAFE LOAN ELIGIBILITY CAP (60% Rule): ₹${pred.suggested_loan_limit_rs || 'N/A'}
-        - Risk Level: ${pred.risk_level || 'Medium'}
-        - NDVI Score: ${scores.ndvi?.score || 'N/A'}
-        - IMD Weather: ${scores.weather?.description || 'N/A'}
-        
-        STRICT INSTRUCTIONS:
+      
+      [CONFIRMED FARMER FORM DATA]:
+      - Crop: ${inputs.crop || 'N/A'}
+      - Location: ${inputs.district || 'N/A'}, ${inputs.state || 'N/A'}
+      - Land Area: ${inputs.area_hectares || 'N/A'} Hectares
+      - Loan Tenure: ${plan.loan_tenure_years || 1} Year(s)
+      - Sowing Month: ${plan.start_month || 'N/A'}
+      - Next Crop Sowing Decision: ${plan.next_crop_decision?.recommended_next_crop || 'Summer Mung Bean'} in ${plan.next_crop_decision?.recommended_next_sow_date || 'May First Week'}
+      
+      [ML TELEMETRY & CALCULATIONS]:
+      - Current Crop Revenue: ₹${pred.adjusted_estimated_revenue_rs || 'N/A'}
+      - Total Loan Tenure Combined Revenue: ₹${pred.total_1year_combined_revenue_rs || 'N/A'}
+      - MAXIMUM SAFE LOAN ELIGIBILITY CAP (60% Rule): ₹${pred.suggested_loan_limit_rs || 'N/A'}
+      - Risk Level: ${pred.risk_level || 'Medium'}
+
+      [GOVERNMENT KISAN SCHEMES RAG CONTEXT (FROM PYTHON RAG ENGINE)]:
+      ${pythonRAGContext}
+      
+      STRICT INSTRUCTIONS:
       1. NEVER ask for Crop name, Location, Land Area, or Loan Tenure. The farmer has ALREADY filled out these details in the form!
       2. Do NOT use markdown asterisks (**) in your output text. Write clean, natural plain text without any ** symbols.
       3. If asked "how much loan will i get?", "loan amount", or eligibility questions, state immediately:
          "Based on your land details (${inputs.crop || 'Wheat'} on ${areaHa} Ha in ${inputs.district || 'Ahilyanagar'}), you are eligible for a loan amount of ₹${loanEligibilityAmount.toLocaleString('en-IN')}."
-      4. Explain the 60% safe repayment capacity rule and crop succession plan.
-      5. Ask if they want assistance with KCC bank application (SBI/NABARD), crop insurance (PM Fasal Bima Yojana), or weather advisories.`
+      4. If asked about government schemes, subsidies, PM-Kisan, KCC, or loan waivers, use the Python RAG context above to state exact benefits and application steps clearly.`
       
-      : `आप किसानAI हैं — भारतीय किसानों के लिए विशेषज्ञ कृषि ऋण मूल्यांकन सहायक।
+      : `आप किसानAI हैं — भारतीय किसानों के लिए विशेषज्ञ कृषि ऋण मूल्यांकन एवं सरकारी योजना सहायक।
       सरल और किसान-मित्र हिंदी भाषा में जवाब दें।
       
       [डैशबोर्ड फ़ॉर्म से किसान का सत्यापित डेटा]:
@@ -92,14 +107,16 @@ exports.chatWithAI = async (req, res) => {
       
       [सत्यापित ऋण पात्रता राशि]:
       - स्वीकार्य अधिकतम सुरक्षित ऋण राशि: ₹${loanEligibilityAmount.toLocaleString('en-IN')}
+
+      [सरकारी किसान योजनाएं RAG ज्ञान (पायथन RAG इंजन से)]:
+      ${pythonRAGContext}
       
       सख्त नियम:
       1. किसान से कभी भी फसल, स्थान, खेत का क्षेत्रफल या ऋण की अवधि न पूछें!
       2. अपने उत्तर में स्टार मार्क्स (**) का उपयोग बिल्कुल न करें। बिल्कुल साफ़ और सरल पाठ (plain text) लिखें।
       3. जब भी किसान ऋण की मात्रा पूछे, तो स्पष्ट रूप से कहें:
          "आपके भूमि विवरण (${inputs.crop || 'गेहूं'}, ${areaHa} हेक्टेयर) के अनुसार, आप ₹${loanEligibilityAmount.toLocaleString('en-IN')} की ऋण राशि के लिए पात्र हैं (You are eligible for loan amount ₹${loanEligibilityAmount.toLocaleString('en-IN')})।"
-      4. महीने-दर-महीने कटाई और उत्तराधिकार फसल योजना समझाएं।
-      5. पूछें कि क्या वे केसीसी बैंक आवेदन (स्टेट बैंक/नाबार्ड), पीएम फसल बीमा योजना या सिंचाई में मदद चाहते हैं।`;
+      4. यदि किसान सरकारी योजनाओं, सब्सिडी, पीएम-किसान, केसीसी या कर्जमाफी के बारे में पूछे, तो ऊपर दिए गए पायथन RAG ज्ञान का उपयोग करके सटीक पात्रता और आवेदन प्रक्रिया बताएं।`;
 
     // Construct full prompt for Groq
     const apiMessages = [

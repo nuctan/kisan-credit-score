@@ -5,8 +5,10 @@ import uvicorn
 from data_loader import get_historical_averages
 from scoring import get_ndvi_score, get_weather_score, get_soil_score, calculate_adjusted_revenue
 from crop_succession import get_multiyear_crop_succession_plan
+from trend_analytics import get_12month_ndvi_weather_trends
+from schemes_rag import query_kisan_schemes
 
-app = FastAPI(title="KrishiAI ML Service")
+app = FastAPI(title="KrishiAI ML & RAG Microservice")
 
 class PredictionRequest(BaseModel):
     state: str
@@ -18,6 +20,16 @@ class PredictionRequest(BaseModel):
     loan_tenure_years: Optional[int] = 1
     start_month_index: Optional[int] = 10
     current_crop_duration: Optional[int] = 4
+
+class TrendRequest(BaseModel):
+    district: str
+    crop: Optional[str] = "Wheat"
+
+class SchemesRAGRequest(BaseModel):
+    query: Optional[str] = ""
+    crop: Optional[str] = "Wheat"
+    state: Optional[str] = "Maharashtra"
+    lang: Optional[str] = "hi"
 
 @app.post("/api/predict-revenue")
 def predict_revenue(req: PredictionRequest):
@@ -86,6 +98,14 @@ def predict_revenue(req: PredictionRequest):
         },
         "one_year_succession_plan": succession_plan
     }
+
+@app.post("/api/ndvi-weather-trends")
+def get_trends(req: TrendRequest):
+    return get_12month_ndvi_weather_trends(req.district, req.crop)
+
+@app.post("/api/kisan-schemes")
+def get_schemes(req: SchemesRAGRequest):
+    return query_kisan_schemes(req.query, req.crop, req.state, req.lang)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
