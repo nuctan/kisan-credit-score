@@ -4,9 +4,15 @@ venv/
 __pycache__/
 *.pyc
 
-# Environment & Secrets
+# Environment & Secrets (NEVER COMMIT TO GITHUB)
 .env
-.env.local
+*.env
+.env.*
+backend/.env
+ml_service/.env
+ml_service/ndvi_cache.json
+myprofile*
+.config/
 
 # Build outputs
 dist/
@@ -24,4 +30,3 @@ Thumbs.db
 plan.md
 architecture.md
 docs/
-ml_service/.env

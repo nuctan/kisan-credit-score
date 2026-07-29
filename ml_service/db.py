@@ -3,7 +3,7 @@ import pymongo
 import hashlib
 import secrets
 
-MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://nuctankatira_db_user:admin@cluster0.4mhnecz.mongodb.net/?appName=Cluster0")
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://127.0.0.1:27017/kisaanai")
 
 db_client = None
 db = None
