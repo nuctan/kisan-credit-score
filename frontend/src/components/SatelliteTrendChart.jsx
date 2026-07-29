@@ -71,7 +71,9 @@ const SatelliteTrendChart = ({ district = 'Ahilyanagar (Ahmednagar)', crop = 'Wh
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="bg-[#FFF8F0] p-3 rounded-xl border border-[#E8630A]/20">
           <span className="text-[11px] text-gray-500 font-bold block mb-0.5">औसत वार्षिक NDVI (Mean NDVI)</span>
-          <strong className="text-base font-black text-[#2D6A4F]">{trendData.mean_ndvi}</strong>
+          <strong className="text-base font-black text-[#2D6A4F]">
+            {typeof trendData.mean_ndvi === 'number' ? trendData.mean_ndvi.toFixed(2) : trendData.mean_ndvi}
+          </strong>
           <span className="text-[10px] text-gray-500 block">उच्चतम हरियाली: {trendData.peak_vegetation_month}</span>
         </div>
 
@@ -94,8 +96,8 @@ const SatelliteTrendChart = ({ district = 'Ahilyanagar (Ahmednagar)', crop = 'Wh
       <div className="relative pt-6 pb-2">
         <div className="h-44 flex items-end justify-between gap-1 sm:gap-2 px-2 border-b border-gray-300 relative">
           
-          {/* SVG Line Curve connecting NDVI green dots */}
-          <svg className="absolute inset-0 w-full h-44 pointer-events-none z-10 overflow-visible" preserveAspectRatio="none">
+          {/* SVG Line Curve connecting NDVI green dots using viewBox */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 1200 100" preserveAspectRatio="none">
             <polyline
               fill="none"
               stroke="#2D6A4F"
@@ -103,9 +105,9 @@ const SatelliteTrendChart = ({ district = 'Ahilyanagar (Ahmednagar)', crop = 'Wh
               strokeLinecap="round"
               strokeLinejoin="round"
               points={monthly.map((m, i) => {
-                const xPct = ((i + 0.5) / 12) * 100;
-                const yPct = 100 - (m.ndvi * 100);
-                return `${xPct}%,${yPct}%`;
+                const x = (i + 0.5) * 100;
+                const y = 100 - (m.ndvi * 100);
+                return `${x},${y}`;
               }).join(' ')}
             />
           </svg>
