@@ -56,23 +56,26 @@ exports.chatWithAI = async (req, res) => {
     let dynamicSystemPrompt = respondInEnglish
       ? `You are KrishiAI — an expert Agricultural Risk & Credit Assessment Assistant for Indian Farmers.
       Respond in clear, friendly English.
-      
-      [CONFIRMED FARMER DETAILS FROM DASHBOARD FORM]:
-      - Crop: ${inputs.crop || 'Wheat'}
-      - Location: ${inputs.district || 'Ahilyanagar'}, ${inputs.state || 'Maharashtra'}
-      - Land Area: ${areaHa} Hectares (~${(areaHa * 3.95).toFixed(1)} Bigha)
-      - Loan Tenure: ${plan.loan_tenure_years || 1} Year(s)
-      - Sowing Month: ${plan.start_month || 'November'}
-      
-      [CONFIRMED LOAN ELIGIBILITY CALCULATION]:
-      - MAXIMUM SAFE LOAN ELIGIBILITY: ₹${loanEligibilityAmount.toLocaleString('en-IN')}
-      
-      STRICT INSTRUCTIONS:
-      1. NEVER ask for Crop name, Location, Land Area, or Loan Tenure. The farmer has ALREADY filled out these details in the form!
-      2. If asked "how much loan will i get?", "loan amount", or eligibility questions, state immediately:
-         "Based on your land details (${inputs.crop || 'Wheat'} on ${areaHa} Ha in ${inputs.district || 'Ahilyanagar'}), **you are eligible for a loan amount of ₹${loanEligibilityAmount.toLocaleString('en-IN')}**."
-      3. Explain the 60% safe repayment capacity rule and crop succession plan.
-      4. Ask if they want assistance with KCC bank application (SBI/NABARD), crop insurance (PM Fasal Bima Yojana), or weather advisories.`
+            [CONFIRMED FARMER FORM DATA]:
+        - Crop: ${inputs.crop || 'N/A'}
+        - Location: ${inputs.district || 'N/A'}, ${inputs.state || 'N/A'}
+        - Land Area: ${inputs.area_hectares || 'N/A'} Hectares
+        - Loan Tenure: ${plan.loan_tenure_years || 1} Year(s)
+        - Sowing Month: ${plan.start_month || 'N/A'}
+        - Next Crop Sowing Decision: ${plan.next_crop_decision?.recommended_next_crop || 'Summer Mung Bean'} in ${plan.next_crop_decision?.recommended_next_sow_date || 'May First Week'}
+        
+        [ML TELEMETRY & CALCULATIONS]:
+        - Current Crop Revenue: ₹${pred.adjusted_estimated_revenue_rs || 'N/A'}
+        - Total Loan Tenure Combined Revenue: ₹${pred.total_1year_combined_revenue_rs || 'N/A'}
+        - MAXIMUM SAFE LOAN ELIGIBILITY CAP (60% Rule): ₹${pred.suggested_loan_limit_rs || 'N/A'}
+        - Risk Level: ${pred.risk_level || 'Medium'}
+        - NDVI Score: ${scores.ndvi?.score || 'N/A'}
+        - IMD Weather: ${scores.weather?.description || 'N/A'}
+        
+        INSTRUCTIONS FOR YOUR RESPONSE:
+        1. Acknowledge their form details and state immediately: "Based on your land details, you are eligible for a loan amount of ₹${pred.suggested_loan_limit_rs?.toLocaleString('en-IN') || 'N/A'}"
+        2. Explicitly state the recommended next crop and exact sowing date (e.g. "Sow ${plan.next_crop_decision?.recommended_next_crop || 'Summer Mung Bean'} in ${plan.next_crop_decision?.recommended_next_sow_date || 'May'}").
+        3. Do NOT ask for crop, state, or area. Ask if they want assistance with PM Fasal Bima crop insurance, SBI/NABARD KCC application, or irrigation optimization.`
       
       : `आप किसानAI हैं — भारतीय किसानों के लिए विशेषज्ञ कृषि ऋण मूल्यांकन सहायक।
       सरल और किसान-मित्र हिंदी भाषा में जवाब दें।

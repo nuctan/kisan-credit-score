@@ -4,6 +4,10 @@ MONTH_NAMES = [
     "सितंबर (September)", "अक्टूबर (October)", "नवंबर (November)", "दिसंबर (December)"
 ]
 
+MONTH_SHORT_EN = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+]
+
 # Standard agronomic growing durations (in Months)
 DEFAULT_CROP_DURATIONS = {
     "wheat": 4,      # ~120 days
@@ -26,31 +30,46 @@ def get_multiyear_crop_succession_plan(
     area_hectares: float, 
     current_crop_revenue: float,
     loan_tenure_years: int = 1,
-    start_month_index: int = 10, # default November
+    start_month_index: int = 10, # default November (idx 10)
     current_crop_duration: int = None
 ):
     """
     Calculates a multi-year crop succession plan for loan tenure (1, 2, 3, or 5 Years).
-    Automatically looks up crop duration if not explicitly provided.
+    Automatically computes exact harvest dates, land preparation windows, and optimal next crop sowing dates.
     """
     if not current_crop_duration or current_crop_duration <= 0:
         current_crop_duration = get_default_crop_duration(current_crop)
 
     total_months = loan_tenure_years * 12
-    crop_lower = current_crop.lower()
     
-    # 1. Harvest month index for current crop
+    # 1. Compute current crop harvest month
     first_harvest_month_idx = (start_month_index + current_crop_duration) % 12
     
+    # 2. Next Crop Optimal Sowing Date Decision
+    # Land prep gap: ~15 to 20 days after harvest month
+    next_sow_month_idx = first_harvest_month_idx  # Sowing begins right after harvest month in first week
+    
+    next_crop_decision = {
+        "current_crop": current_crop,
+        "sowing_start": MONTH_NAMES[start_month_index],
+        "harvest_expected": MONTH_NAMES[first_harvest_month_idx],
+        "soil_prep_window": f"15-20 दिन भूमि सुधार अवधिक ({MONTH_NAMES[first_harvest_month_idx]} अंत)",
+        "recommended_next_crop": "ग्रीष्मकालीन मूंग दलहन (Summer Mung Bean / Pulses)" if "wheat" in current_crop.lower() else "गेहूं / सरसों (Rabi Wheat/Mustard)",
+        "recommended_next_sow_date": f"1st Week of {MONTH_NAMES[next_sow_month_idx]} ({MONTH_NAMES[next_sow_month_idx]} का पहला सप्ताह)",
+        "recommended_next_sow_month_idx": next_sow_month_idx,
+        "agronomic_reason": "गेहूं कटाई के बाद दलहन उगाने से मिट्टी में प्राकृतिक नाइट्रोजन जमता है एवं कम पानी में 65 दिनों में नकद आय मिलती है।"
+    }
+
     succession_cycles = []
     
     # Cycle 1: Current Crop
     succession_cycles.append({
         "cycle_number": 1,
         "year": 1,
-        "period": f"महीने 1 - {current_crop_duration} ({MONTH_NAMES[start_month_index]} से {MONTH_NAMES[first_harvest_month_idx]})",
+        "period": f"महीने 1 - {current_crop_duration} ({MONTH_NAMES[start_month_index]} बुआई ➔ {MONTH_NAMES[first_harvest_month_idx]} कटाई)",
         "crop": f"{current_crop} (वर्तमान फसल)",
         "duration_months": current_crop_duration,
+        "sow_month": MONTH_NAMES[start_month_index],
         "harvest_month": MONTH_NAMES[first_harvest_month_idx],
         "estimated_revenue_rs": round(current_crop_revenue, 2),
         "soil_impact": "मुख्य फसल पैदावार",
@@ -63,10 +82,34 @@ def get_multiyear_crop_succession_plan(
     
     # Rotation pool based on crop science
     rotation_pool = [
-        {"crop": "मूंग दलहन (Mung Bean / Pulses)", "rev_per_ha": 38000, "duration": 3, "impact": "मिट्टी में नाइट्रोजन निर्धारण (N-Fixation)"},
-        {"crop": "धान / मक्का (Paddy / Maize)", "rev_per_ha": 86000, "duration": 5, "impact": "उच्च मानसून पैदावार"},
-        {"crop": "गेहूं / सरसों (Wheat / Mustard)", "rev_per_ha": 82000, "duration": 4, "impact": "रबी सीजन उच्च बाजार मूल्य"},
-        {"crop": "सूरजमुखी / सब्जियां (Sunflower / Vegetables)", "rev_per_ha": 45000, "duration": 3, "impact": "त्वरित नकद आय एवं नमी संरक्षण"}
+        {
+            "crop": "मूंग दलहन (Mung Bean / Pulses)",
+            "rev_per_ha": 38000,
+            "duration": 3,
+            "impact": "मिट्टी में नाइट्रोजन निर्धारण (N-Fixation)",
+            "reason": "60-70 दिनों की त्वरित ग्रीष्मकालीन नकद फसल"
+        },
+        {
+            "crop": "धान / मक्का (Paddy / Maize)",
+            "rev_per_ha": 86000,
+            "duration": 5,
+            "impact": "उच्च मानसून पैदावार",
+            "reason": "मानसून बारिश का अधिकतम उपयोग"
+        },
+        {
+            "crop": "गेहूं / सरसों (Wheat / Mustard)",
+            "rev_per_ha": 82000,
+            "duration": 4,
+            "impact": "रबी सीजन उच्च बाजार मूल्य",
+            "reason": "शीतकालीन रबी फसल का प्रमुख मंडी भाव"
+        },
+        {
+            "crop": "सूरजमुखी / सब्जियां (Sunflower / Vegetables)",
+            "rev_per_ha": 45000,
+            "duration": 3,
+            "impact": "त्वरित नकद आय एवं नमी संरक्षण",
+            "reason": "उच्च नकद लाभ एवं भूमि उर्वरता"
+        }
     ]
     
     pool_idx = 0
@@ -81,12 +124,14 @@ def get_multiyear_crop_succession_plan(
         succession_cycles.append({
             "cycle_number": cycle_counter,
             "year": year_num,
-            "period": f"वर्ष {year_num} - {MONTH_NAMES[current_month_cursor]} से {MONTH_NAMES[end_month_idx]}",
+            "period": f"वर्ष {year_num} - {MONTH_NAMES[current_month_cursor]} बुआई ➔ {MONTH_NAMES[end_month_idx]} कटाई",
             "crop": rot["crop"],
             "duration_months": duration,
+            "sow_month": MONTH_NAMES[current_month_cursor],
             "harvest_month": MONTH_NAMES[end_month_idx],
             "estimated_revenue_rs": cycle_rev,
             "soil_impact": rot["impact"],
+            "agronomic_reason": rot["reason"],
             "status": f"अनुशंसित फसल उत्तराधिकार #{cycle_counter - 1}"
         })
         
@@ -104,6 +149,7 @@ def get_multiyear_crop_succession_plan(
         "total_loan_months": total_months,
         "start_month": MONTH_NAMES[start_month_index],
         "current_crop_duration_months": current_crop_duration,
+        "next_crop_decision": next_crop_decision,
         "succession_cycles": succession_cycles,
         "total_annual_combined_revenue_rs": round(total_combined_revenue, 2),
         "one_year_loan_eligibility_cap_rs": safe_loan_cap,

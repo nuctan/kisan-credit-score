@@ -20,6 +20,7 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
-# Documentation & Plans
+# Documentation & Plans (Local Only)
 plan.md
 architecture.md
+docs/
