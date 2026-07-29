@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polygon, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polygon, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 
 delete L.Icon.Default.prototype._getIconUrl;
@@ -75,6 +75,17 @@ function PolygonDrawer({ polygonPoints, setPolygonPoints, setSelectedPos }) {
       )}
     </>
   );
+}
+
+// Smoothly flies the map to a new position whenever selectedPos changes
+function FlyToLocation({ position }) {
+  const map = useMap();
+  useEffect(() => {
+    if (position && position.length === 2) {
+      map.flyTo(position, 13, { animate: true, duration: 1.2 });
+    }
+  }, [position, map]);
+  return null;
 }
 
 const FarmlandMap = ({ selectedPos, setSelectedPos, onConfirmSelection, onAreaChange, lang = 'hi', t }) => {
@@ -174,6 +185,7 @@ const FarmlandMap = ({ selectedPos, setSelectedPos, onConfirmSelection, onAreaCh
         style={{ height: '100%', width: '100%' }}
       >
         <TileLayer attribution="Tiles &copy; Esri &mdash; Sentinel-2 RGB Imagery" url={tileUrl} />
+        <FlyToLocation position={pos} />
         <PolygonDrawer
           polygonPoints={polygonPoints}
           setPolygonPoints={setPolygonPoints}

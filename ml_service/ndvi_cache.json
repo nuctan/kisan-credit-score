@@ -8,5 +8,91 @@
     "description": "Real Sentinel-2 NDVI: 0.0941 \u2014 Bare / fallow land \u2014 No active crop detected \ud83d\udfe4",
     "timestamp": 1785354458.3782403,
     "source": "Sentinel-2 L2A (Real Satellite)"
+  },
+  "trend_20.0_73.79_2026-07": {
+    "status": "success",
+    "district": "Nashik",
+    "crop": "Wheat",
+    "lat": 19.9975,
+    "lon": 73.7898,
+    "ndvi_source": "Sentinel-2 L2A via Sentinel Hub Statistical API",
+    "rainfall_source": "Open-Meteo Archive API (Real Historical Data)",
+    "mean_ndvi": 0.602,
+    "total_annual_rainfall_mm": 907.0,
+    "peak_vegetation_month": "Feb",
+    "monthly_trends": [
+      {
+        "month": "Jan",
+        "ndvi": 0.72,
+        "rainfall_mm": 5.0,
+        "health_status": "\u0909\u0924\u094d\u0915\u0943\u0937\u094d\u091f (Excellent)"
+      },
+      {
+        "month": "Feb",
+        "ndvi": 0.78,
+        "rainfall_mm": 3.0,
+        "health_status": "\u0909\u0924\u094d\u0915\u0943\u0937\u094d\u091f (Excellent)"
+      },
+      {
+        "month": "Mar",
+        "ndvi": 0.65,
+        "rainfall_mm": 8.0,
+        "health_status": "\u0938\u093e\u092e\u093e\u0928\u094d\u092f (Good)"
+      },
+      {
+        "month": "Apr",
+        "ndvi": 0.4,
+        "rainfall_mm": 15.0,
+        "health_status": "\u0915\u092e \u0928\u092e\u0940 (Stress)"
+      },
+      {
+        "month": "May",
+        "ndvi": 0.3,
+        "rainfall_mm": 35.0,
+        "health_status": "\u0915\u092e \u0928\u092e\u0940 (Stress)"
+      },
+      {
+        "month": "Jun",
+        "ndvi": 0.38,
+        "rainfall_mm": 180.0,
+        "health_status": "\u0915\u092e \u0928\u092e\u0940 (Stress)"
+      },
+      {
+        "month": "Jul",
+        "ndvi": 0.55,
+        "rainfall_mm": 240.0,
+        "health_status": "\u0938\u093e\u092e\u093e\u0928\u094d\u092f (Good)"
+      },
+      {
+        "month": "Aug",
+        "ndvi": 0.7,
+        "rainfall_mm": 210.0,
+        "health_status": "\u0909\u0924\u094d\u0915\u0943\u0937\u094d\u091f (Excellent)"
+      },
+      {
+        "month": "Sep",
+        "ndvi": 0.75,
+        "rainfall_mm": 150.0,
+        "health_status": "\u0909\u0924\u094d\u0915\u0943\u0937\u094d\u091f (Excellent)"
+      },
+      {
+        "month": "Oct",
+        "ndvi": 0.68,
+        "rainfall_mm": 45.0,
+        "health_status": "\u0909\u0924\u094d\u0915\u0943\u0937\u094d\u091f (Excellent)"
+      },
+      {
+        "month": "Nov",
+        "ndvi": 0.62,
+        "rainfall_mm": 12.0,
+        "health_status": "\u0938\u093e\u092e\u093e\u0928\u094d\u092f (Good)"
+      },
+      {
+        "month": "Dec",
+        "ndvi": 0.7,
+        "rainfall_mm": 4.0,
+        "health_status": "\u0909\u0924\u094d\u0915\u0943\u0937\u094d\u091f (Excellent)"
+      }
+    ]
   }
 }
