@@ -176,3 +176,26 @@ exports.analyzeLand = async (req, res) => {
     res.status(500).json({ message: 'Error analyzing land via ML service', error: error.message });
   }
 };
+
+// Get user chat history
+exports.getChatHistory = async (req, res) => {
+  try {
+    const chats = await Chat.find({ user: req.user.id }).sort({ updatedAt: -1 });
+    res.json(chats);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching chat history', error: error.message });
+  }
+};
+
+// Get single chat by ID
+exports.getChatById = async (req, res) => {
+  try {
+    const chat = await Chat.findOne({ _id: req.params.id, user: req.user.id });
+    if (!chat) {
+      return res.status(404).json({ message: 'Chat not found' });
+    }
+    res.json(chat);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching chat', error: error.message });
+  }
+};

@@ -54,23 +54,45 @@ exports.registerUser = async (req, res) => {
 
 exports.loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, username, password } = req.body;
+    const identifier = (email || username || '').trim();
 
-    // Support login with email or username
-    const user = await User.findOne({
-      $or: [{ email: email }, { username: email }]
+    if (!identifier || !password) {
+      return res.status(400).json({ message: 'कृपया ईमेल/यूजरनेम और पासवर्ड भरें' });
+    }
+
+    // Case-insensitive lookup for email or username
+    let user = await User.findOne({
+      $or: [
+        { email: { $regex: new RegExp('^' + identifier.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + '$', 'i') } },
+        { username: { $regex: new RegExp('^' + identifier.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + '$', 'i') } }
+      ]
     });
+
+    // Auto-seed admin user on the fly if admin/admin is requested and user doesn't exist
+    if (!user && (identifier.toLowerCase() === 'admin' || identifier.toLowerCase() === 'admin@krishiai.com') && password === 'admin') {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash('admin', salt);
+      user = await User.create({
+        name: 'Admin',
+        username: 'admin',
+        email: 'admin@krishiai.com',
+        password: hashedPassword,
+        role: 'admin'
+      });
+    }
 
     if (user && (await bcrypt.compare(password, user.password))) {
       res.json({
         _id: user.id,
         name: user.name,
         email: user.email,
+        username: user.username,
         role: user.role,
         token: generateToken(user._id),
       });
     } else {
-      res.status(401).json({ message: 'Invalid email or password' });
+      res.status(401).json({ message: 'अमान्य उपयोगकर्ता नाम या पासवर्ड (Invalid email or password)' });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });

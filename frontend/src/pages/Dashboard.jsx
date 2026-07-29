@@ -59,7 +59,7 @@ const Dashboard = () => {
     }
   }, [user, navigate]);
 
-  // Form states for Land & Loan Selection
+  // Form states for Land & Loan Selection (State locked to Maharashtra)
   const [formState, setFormState] = useState({
     state: 'Maharashtra',
     district: 'Ahilyanagar (Ahmednagar)',
@@ -74,24 +74,8 @@ const Dashboard = () => {
   const [analysisData, setAnalysisData] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
 
-  // Available districts for current state
-  const currentDistricts = INDIA_STATES_DISTRICTS[formState.state]?.districts || [
-    { name: formState.district, coords: selectedPos }
-  ];
-
-  // Handle State Change
-  const handleStateChange = (newState) => {
-    const stateData = INDIA_STATES_DISTRICTS[newState];
-    const defaultDistrict = stateData?.districts[0];
-    const newCoords = defaultDistrict?.coords || stateData?.coords || [19.0958, 74.7496];
-
-    setFormState(prev => ({
-      ...prev,
-      state: newState,
-      district: defaultDistrict ? defaultDistrict.name : ''
-    }));
-    setSelectedPos(newCoords);
-  };
+  // Maharashtra districts list
+  const currentDistricts = INDIA_STATES_DISTRICTS.Maharashtra.districts;
 
   // Handle District Change & Auto-center Satellite Map
   const handleDistrictChange = (newDistrictName) => {
@@ -141,9 +125,9 @@ const Dashboard = () => {
   const [input, setInput] = useState('');
   const [loadingChat, setLoadingChat] = useState(false);
   const [chatId, setChatId] = useState(null);
-  const messagesEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
 
-  // Synchronize AI Chat Welcome Message when form inputs or language change
+  // Synchronize AI Chat Welcome Message when form inputs or language change WITHOUT viewport dragging
   useEffect(() => {
     setMessages(prev => {
       const updated = [...prev];
@@ -152,16 +136,12 @@ const Dashboard = () => {
     });
   }, [formState.crop, formState.areaHectares, formState.district, formState.state, formState.startMonthIndex, formState.loanTenureYears, lang]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loadingChat]);
-
   // Handle Dynamic Area Change from Map Polygon
   const handleAreaChange = (newHectares) => {
     setFormState(prev => ({ ...prev, areaHectares: newHectares }));
   };
 
-  // Trigger ML Analysis via Backend & Python Service
+  // Trigger ML Analysis via Backend & Python Service (Silent update without viewport dragging)
   const handleAnalyzeLand = async (coords = selectedPos, customArea = formState.areaHectares) => {
     setAnalyzing(true);
     try {
@@ -253,6 +233,11 @@ const Dashboard = () => {
 
       setChatId(res.data.chatId);
       setMessages(prev => [...prev, { role: 'assistant', content: res.data.reply }]);
+      
+      // Scroll ONLY inside the chat container when user sends a message
+      if (chatContainerRef.current) {
+        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      }
     } catch (err) {
       setMessages(prev => [...prev, { role: 'assistant', content: lang === 'en' ? '⚠️ Error sending message.' : '⚠️ संदेश भेजने में त्रुटि हुई।' }]);
     } finally {
@@ -296,7 +281,7 @@ const Dashboard = () => {
               type="button"
               onClick={() => setLang('en')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                lang === 'en' ? 'bg-[#2D6A4F] text-white shadow-sm' : 'text-gray-600 hover:text-black'
+                lang === 'en' ? 'bg-[#2D6A4F] text-[#FFF8F0] shadow-sm' : 'text-gray-600 hover:text-black'
               }`}
             >
               🇬🇧 English
@@ -330,23 +315,21 @@ const Dashboard = () => {
             <span className="text-xs text-gray-500">{t.step1}</span>
           </div>
 
-          {/* Agricultural Inputs with State & District Dropdowns */}
+          {/* Agricultural Inputs - State locked to Maharashtra */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {/* State Select Dropdown */}
+            {/* State (Maharashtra only) */}
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1">{t.state}</label>
               <select
-                value={formState.state}
-                onChange={e => handleStateChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm font-semibold text-[#3D2C1E] focus:border-[#E8630A] focus:outline-none"
+                disabled
+                value="Maharashtra"
+                className="w-full px-3 py-2 border border-gray-300 bg-gray-100 rounded-xl text-sm font-semibold text-gray-700 cursor-not-allowed"
               >
-                {Object.keys(INDIA_STATES_DISTRICTS).map(st => (
-                  <option key={st} value={st}>{st}</option>
-                ))}
+                <option value="Maharashtra">Maharashtra (महाराष्ट्र)</option>
               </select>
             </div>
 
-            {/* District Select Dropdown (NEW FEATURE) */}
+            {/* District Select Dropdown */}
             <div>
               <label className="block text-xs font-bold text-[#2D6A4F] mb-1">जिला (Select District)</label>
               <select
@@ -477,7 +460,7 @@ const Dashboard = () => {
           />
         )}
 
-        {/* Step 7: PDF Report Button & Crop Rotation Planner */}
+        {/* Step 7: PDF Report Button & Dynamic Crop Rotation Planner */}
         {analysisData && (
           <div className="flex justify-center pt-2">
             <PDFReportButton
@@ -489,9 +472,9 @@ const Dashboard = () => {
           </div>
         )}
 
-        <CropRotationPlanner areaHectares={parseFloat(formState.areaHectares) || 2.5} t={t} />
+        <CropRotationPlanner formState={formState} areaHectares={parseFloat(formState.areaHectares) || 2.5} t={t} />
 
-        {/* Step 8: Embedded AI Chat Assistant on Main Dashboard */}
+        {/* Step 8: Embedded AI Chat Assistant on Main Dashboard (No Viewport Dragging) */}
         <div className="bg-white rounded-2xl shadow-xl border border-[#E8630A]/20 h-[520px] flex flex-col overflow-hidden">
           <div className="p-4 bg-[#2D6A4F] text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -501,8 +484,8 @@ const Dashboard = () => {
             <span className="text-xs bg-white/20 px-2.5 py-1 rounded-full">Groq LLaMA 3.3 Engine ({lang.toUpperCase()})</span>
           </div>
 
-          {/* Chat Body */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-[#FFF8F0] to-[#fcf3e8]">
+          {/* Chat Body Container with Scroll Ref */}
+          <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-[#FFF8F0] to-[#fcf3e8]">
             {messages.map((msg, idx) => (
               <div
                 key={idx}
@@ -529,7 +512,6 @@ const Dashboard = () => {
                 <span>{t.chatSending}</span>
               </div>
             )}
-            <div ref={messagesEndRef} />
           </div>
 
           {/* Input Bar */}
