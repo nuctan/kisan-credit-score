@@ -1,19 +1,19 @@
-import random
+from ndvi_real import get_real_ndvi
 from imd_service import fetch_imd_weather
 
 def get_ndvi_score(lat: float, lon: float, crop: str) -> dict:
     """
-    Calculates NDVI Vegetation Health Score based on satellite GPS coordinates.
+    Fetches REAL NDVI from Sentinel-2 L2A satellite via Sentinel Hub API.
+    Falls back to deterministic estimate if API is unavailable (offline/cloudy).
     """
-    # Deterministic calculation based on latitude/longitude hash + small variance
-    coord_seed = (abs(lat) * 1000 + abs(lon) * 100) % 100
-    base_score = 0.85 + (coord_seed / 250.0) # Ranges ~ 0.85 to 1.15
-    base_score = min(1.20, max(0.80, base_score))
-    
-    health_status = "Good vegetation density" if base_score >= 1.0 else "Moderate vegetation health"
+    result = get_real_ndvi(lat, lon)
     return {
-        "score": round(base_score, 2),
-        "description": f"NDVI Index: {round(base_score, 2)} ({health_status})"
+        "score": result["score"],
+        "ndvi": result["ndvi"],
+        "b04_red": result.get("b04_red", 0),
+        "b08_nir": result.get("b08_nir", 0),
+        "description": result["description"],
+        "source": result.get("source", "Sentinel-2 L2A")
     }
 
 def get_weather_score(lat: float, lon: float) -> dict:
@@ -26,10 +26,9 @@ def get_soil_score(state: str, district: str) -> dict:
     """
     Calculates Soil Quality Score based on regional N-P-K nutrient density.
     """
-    # Soil nitrogen & organic carbon richness multiplier
     district_hash = sum(ord(c) for c in district) if district else 50
-    soil_val = 0.95 + ((district_hash % 15) / 100.0) # 0.95 to 1.10
-    
+    soil_val = 0.95 + ((district_hash % 15) / 100.0)  # 0.95 to 1.10
+
     return {
         "score": round(soil_val, 2),
         "description": "Optimal N-P-K balance and organic carbon density" if soil_val > 1.0 else "Slight nitrogen deficiency, fertilizer recommended"

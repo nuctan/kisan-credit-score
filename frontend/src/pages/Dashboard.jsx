@@ -134,7 +134,7 @@ const Dashboard = () => {
   const estSafeLoanCap = Math.round(estCombinedRev * 0.60);
 
   // Next Crop Sow Date Prediction
-  const harvestMonthIdx = (formState.startMonthIndex + formState.cropDurationMonths) % 12;
+  const harvestMonthIdx = ((parseInt(formState.startMonthIndex) || 10) + (parseInt(formState.cropDurationMonths) || 4)) % 12;
   const nextSowMonthName = MONTHS_LIST[harvestMonthIdx]?.[lang] || 'May';
 
   // Construct Dynamic Welcome Message that SYNCs automatically with Form Inputs
@@ -273,7 +273,7 @@ const Dashboard = () => {
         },
         one_year_succession_plan: {
           loan_tenure_years: formState.loanTenureYears,
-          start_month: MONTHS_LIST[formState.startMonthIndex].en,
+          start_month: MONTHS_LIST[formState.startMonthIndex || 10]?.en || 'November',
           next_crop_decision: {
             recommended_next_crop: "Summer Mung Bean",
             recommended_next_sow_date: `1st Week of ${nextSowMonthName}`

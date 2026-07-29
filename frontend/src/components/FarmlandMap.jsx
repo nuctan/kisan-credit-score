@@ -90,7 +90,7 @@ const FarmlandMap = ({ selectedPos, setSelectedPos, onConfirmSelection, onAreaCh
 
   // Calculate polygon area in SqMeters, Hectares, and Bigha
   const areaSqMeters = computePolygonAreaSqMeters(polygonPoints);
-  const calculatedHectares = areaSqMeters > 0 ? (areaSqMeters / 10000).toFixed(2) : (areaHectares || '0.00');
+  const calculatedHectares = areaSqMeters > 0 ? (areaSqMeters / 10000).toFixed(2) : '0.00';
   const calculatedBigha = (parseFloat(calculatedHectares) * 3.95).toFixed(2);
 
   useEffect(() => {

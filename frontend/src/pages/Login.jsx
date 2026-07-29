@@ -30,7 +30,10 @@ const Login = () => {
       localStorage.setItem('user', JSON.stringify(response.data)); // backend returns user at root, not response.data.user
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'लॉग इन विफल। कृपया अपने विवरण की जांच करें।');
+      // FastAPI returns errors in `detail` field
+      const errMsg = err.response?.data?.detail || err.response?.data?.message || err.message || 'लॉग इन विफल। कृपया अपने विवरण की जांच करें।';
+      setError(errMsg);
+      console.error('Login error:', err.response?.data || err.message);
     } finally {
       setLoading(false);
     }

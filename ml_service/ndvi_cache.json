@@ -1,0 +1,12 @@
+{
+  "20.0_73.79": {
+    "ndvi": 0.0941,
+    "b04_red": 2180,
+    "b08_nir": 2633,
+    "label": "Bare / fallow land \u2014 No active crop detected \ud83d\udfe4",
+    "score": 0.88,
+    "description": "Real Sentinel-2 NDVI: 0.0941 \u2014 Bare / fallow land \u2014 No active crop detected \ud83d\udfe4",
+    "timestamp": 1785354458.3782403,
+    "source": "Sentinel-2 L2A (Real Satellite)"
+  }
+}
