@@ -1,79 +1,71 @@
-# 🌾 Kisan Credit AI — How To Start
+# 🌾 Kisan Credit AI (किसानAI)
+> **AI-Powered Agricultural Credit Assessment, Sentinel-2 Satellite Intelligence & Crop Succession Platform**
 
-## ⚡ START THE PROJECT (2 Steps Only)
-
-### Step 1: Open your terminal
-
-### Step 2: Paste this command and press Enter
-
-```
-cd /home/nuctan/Desktop/kisaanai && bash start.sh
-```
-
-That's it. Done. ✅
+[![Stack](https://img.shields.io/badge/Stack-100%25%20Python%20%2B%20React%2019-E8630A.svg)](https://fastapi.tiangolo.com/)
+[![License](https://img.shields.io/badge/License-MIT-2D6A4F.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.14-blue.svg)](https://www.python.org/)
 
 ---
 
-## 🌐 Open in Browser
+## 📌 Overview
 
-After running the command above, open your browser and go to:
-
-```
-http://localhost:3000
-```
-
-**Login with:**
-- Username: `admin`
-- Password: `admin`
+**Kisan Credit AI** is an intelligent agricultural fintech and geospatial risk platform built for Indian farmers and credit assessment officers (SBI, NABARD). It replaces traditional paper-heavy land inspections with **Sentinel-2 Satellite Earth Observation**, **Machine Learning Yield Scoring**, **Multi-Year Crop Succession Planning**, and a **Groq LLaMA 3.3 70B RAG AI Assistant**.
 
 ---
 
-## 🛑 How to Stop
+## 🔥 Key Features
 
-Press `CTRL + C` in the same terminal window.
-
----
-
-## ⚠️ If You Use Fish Shell (and see errors)
-
-Instead of `bash start.sh`, run:
-
-```fish
-fish /home/nuctan/Desktop/kisaanai/start.fish
-```
-
-OR run each server manually in 2 separate terminal windows:
-
-**Window 1 (Python Backend):**
-```fish
-cd /home/nuctan/Desktop/kisaanai/ml_service
-./venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8000
-```
-
-**Window 2 (React Frontend):**
-```fish
-cd /home/nuctan/Desktop/kisaanai/frontend
-npm run dev
-```
-
-Then open browser at `http://localhost:3000`
+- **🛰️ Sentinel-2 L2A Satellite Intelligence:** Real-time B08 (NIR) and B04 (Red) spectral band processing for exact **NDVI Vegetation Health** scoring ($\text{NDVI} = \frac{B08 - B04}{B08 + B04}$).
+- **🗺️ Interactive GIS Polygon Math:** Leaflet satellite map interface with automatic geodesic field area calculations ($m^2 \to \text{Hectares} \to \text{Bigha}$).
+- **📈 12-Month Satellite & Weather Analytics:** Real monthly NDVI curves via Sentinel Hub Statistical API and historical rainfall trends via Open-Meteo Archive API.
+- **🤖 Groq LLaMA 3.3 70B RAG Assistant:** Python RAG knowledge engine covering **PM-KISAN**, **KCC**, **PMFBY**, **PM-KUSUM**, **Soil Health Card**, and **Maharashtra Karjmukti Yojna**.
+- **📊 60% Safe Credit Limit Cap:** Multi-year revenue model calculating maximum safe loan eligibility to prevent farmer over-indebtedness.
+- **📄 PDF Credit Assessment Export:** Instant generation of official bank loan evaluation letters.
+- **🌐 100% Pure Python Stack:** Unified FastAPI server on port 8000 handling Auth, PyMongo, Pandas telemetry, and RAG.
 
 ---
 
-## ❓ Common Issues
+## 💻 Tech Stack
 
-| Problem | Fix |
-|---|---|
-| Browser says "Not Found" at port 8000 | That is normal! Go to **port 3000** instead |
-| `uvicorn: command not found` | Use `./venv/bin/python -m uvicorn` |
-| `source: Error` in Fish shell | Use `fish start.fish` or `bash start.sh` |
-| Login fails | Use username `admin` and password `admin` |
+- **Frontend:** React 19, Vite 8, TailwindCSS v4, Leaflet GIS, jsPDF, Framer Motion
+- **Backend:** Python 3.14, FastAPI, Uvicorn, Pydantic v2, PyJWT
+- **Database:** MongoDB Atlas / PyMongo (with zero-dependency local/memory fallback)
+- **ML & Telemetry:** Pandas, NumPy, Sentinel Hub Python SDK, Open-Meteo API
+- **AI & RAG:** Groq LLaMA 3.3 70B Versatile Model (`llama-3.3-70b-versatile`)
 
 ---
 
-## 📌 Port Reference
+## 🚀 Quick Start Guide
 
-| Service | URL |
-|---|---|
-| 🌐 Frontend (React) | http://localhost:3000 |
-| 🐍 Backend (Python FastAPI) | http://localhost:8000 |
+### 1. Clone the Repository
+```bash
+git clone https://github.com/Tanishqkathed/kisaanai.git
+cd kisaanai
+```
+
+### 2. Configure Environment Variables
+Copy the environment template in `ml_service/`:
+```bash
+cp ml_service/.env.example ml_service/.env
+```
+Fill in your credentials in `ml_service/.env`:
+```env
+SENTINELHUB_CLIENT_ID=your_id
+SENTINELHUB_CLIENT_SECRET=your_secret
+GROQ_API_KEY=your_groq_key
+JWT_SECRET=your_secret_key
+MONGO_URI=mongodb://127.0.0.1:27017/kisaanai
+```
+
+### 3. One-Click Launch
+```bash
+bash start.sh
+```
+- 🌐 **Frontend Web App:** [http://localhost:3000](http://localhost:3000)
+- 🐍 **FastAPI Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
+- 🔑 **Default Admin Login:** `admin` / `admin`
+
+---
+
+## 🛡️ Security & Privacy Notice
+All sensitive API keys and database connection strings are isolated in local `.env` files and strictly excluded from git tracking via `.gitignore`.
