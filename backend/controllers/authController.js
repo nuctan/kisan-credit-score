@@ -2,38 +2,49 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+// Secret key for JWT
+const JWT_SECRET = process.env.JWT_SECRET || 'krishiai_secret_key_12345';
+
+// Helper function to generate JWT Token
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'secret123', {
-    expiresIn: '30d',
-  });
+  return jwt.sign({ id }, JWT_SECRET, { expiresIn: '30d' });
 };
 
 exports.registerUser = async (req, res) => {
   try {
-    const { name, fullName, email, password, phone } = req.body;
-    const userNameToUse = name || fullName;
+    const { name, fullName, username, email, password, phone } = req.body;
 
-    if (!userNameToUse || !email || !password) {
-      return res.status(400).json({ message: 'कृपया नाम, ईमेल और पासवर्ड भरें (Name, email, and password are required)' });
+    const userNameToUse = (fullName || name || '').trim();
+
+    if (!email || !password || !userNameToUse) {
+      return res.status(400).json({ message: 'कृपया नाम, ईमेल और पासवर्ड भरें' });
     }
 
-    // Check if user exists
     const userExists = await User.findOne({ email });
+
     if (userExists) {
-      return res.status(400).json({ message: 'User already exists with this email' });
+      return res.status(400).json({ message: 'इस ईमेल से खाता पहले से मौजूद है' });
     }
 
-    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create user
     const user = await User.create({
       name: userNameToUse,
-      username: email.split('@')[0], // default username fallback
+      username: username || email.split('@')[0],
       email,
       password: hashedPassword,
       phone: phone || '',
+      farmProfile: {
+        state: 'Maharashtra',
+        district: '',
+        crop: '',
+        areaHectares: 0,
+        loanTenureYears: 1,
+        startMonthIndex: 10,
+        cropDurationMonths: 4,
+        suggestedLoanLimit: 0
+      }
     });
 
     if (user) {
@@ -42,6 +53,7 @@ exports.registerUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        farmProfile: user.farmProfile,
         token: generateToken(user._id),
       });
     } else {
@@ -61,7 +73,6 @@ exports.loginUser = async (req, res) => {
       return res.status(400).json({ message: 'कृपया ईमेल/यूजरनेम और पासवर्ड भरें' });
     }
 
-    // Case-insensitive lookup for email or username
     let user = await User.findOne({
       $or: [
         { email: { $regex: new RegExp('^' + identifier.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + '$', 'i') } },
@@ -69,7 +80,6 @@ exports.loginUser = async (req, res) => {
       ]
     });
 
-    // Auto-seed admin user on the fly if admin/admin is requested and user doesn't exist
     if (!user && (identifier.toLowerCase() === 'admin' || identifier.toLowerCase() === 'admin@krishiai.com') && password === 'admin') {
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash('admin', salt);
@@ -78,7 +88,17 @@ exports.loginUser = async (req, res) => {
         username: 'admin',
         email: 'admin@krishiai.com',
         password: hashedPassword,
-        role: 'admin'
+        role: 'admin',
+        farmProfile: {
+          state: 'Maharashtra',
+          district: 'Ahilyanagar (Ahmednagar)',
+          crop: 'Wheat',
+          areaHectares: 3.37,
+          loanTenureYears: 1,
+          startMonthIndex: 10,
+          cropDurationMonths: 4,
+          suggestedLoanLimit: 353607
+        }
       });
     }
 
@@ -89,11 +109,55 @@ exports.loginUser = async (req, res) => {
         email: user.email,
         username: user.username,
         role: user.role,
+        farmProfile: user.farmProfile || {},
         token: generateToken(user._id),
       });
     } else {
-      res.status(401).json({ message: 'अमान्य उपयोगकर्ता नाम या पासवर्ड (Invalid email or password)' });
+      res.status(401).json({ message: 'अमान्य उपयोगकर्ता नाम या पासवर्ड' });
     }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.updateFarmProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const { state, district, crop, areaHectares, loanTenureYears, startMonthIndex, cropDurationMonths, suggestedLoanLimit } = req.body;
+
+    user.farmProfile = {
+      state: state || 'Maharashtra',
+      district: district || '',
+      crop: crop || '',
+      areaHectares: areaHectares !== undefined ? parseFloat(areaHectares) : user.farmProfile?.areaHectares || 0,
+      loanTenureYears: loanTenureYears !== undefined ? parseInt(loanTenureYears) : user.farmProfile?.loanTenureYears || 1,
+      startMonthIndex: startMonthIndex !== undefined ? parseInt(startMonthIndex) : user.farmProfile?.startMonthIndex || 10,
+      cropDurationMonths: cropDurationMonths !== undefined ? parseInt(cropDurationMonths) : user.farmProfile?.cropDurationMonths || 4,
+      suggestedLoanLimit: suggestedLoanLimit !== undefined ? parseFloat(suggestedLoanLimit) : user.farmProfile?.suggestedLoanLimit || 0
+    };
+
+    await user.save();
+
+    res.json({
+      message: 'Farm profile saved to database successfully',
+      farmProfile: user.farmProfile
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

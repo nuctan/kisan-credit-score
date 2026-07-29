@@ -55,26 +55,55 @@ const Dashboard = () => {
   const rawUser = localStorage.getItem('user');
   const user = rawUser ? JSON.parse(rawUser) : null;
 
-  useEffect(() => {
-    if (!user || (!user.token && !user._id)) {
-      navigate('/login');
-    }
-  }, [user, navigate]);
-
-  // Form states for Land & Loan Selection (State locked to Maharashtra)
+  // Form states for Land & Loan Selection (NO HARDCODED DEFAULT VALUES for new accounts)
   const [formState, setFormState] = useState({
     state: 'Maharashtra',
-    district: 'Ahilyanagar (Ahmednagar)',
-    crop: 'Wheat',
-    areaHectares: 3.37,
-    loanTenureYears: 1,
-    startMonthIndex: 10, // November
-    cropDurationMonths: 4
+    district: user?.farmProfile?.district || '',
+    crop: user?.farmProfile?.crop || '',
+    areaHectares: user?.farmProfile?.areaHectares || '',
+    loanTenureYears: user?.farmProfile?.loanTenureYears || 1,
+    startMonthIndex: user?.farmProfile?.startMonthIndex !== undefined ? user.farmProfile.startMonthIndex : 10,
+    cropDurationMonths: user?.farmProfile?.cropDurationMonths || 4
   });
 
   const [selectedPos, setSelectedPos] = useState([19.0958, 74.7496]);
   const [analysisData, setAnalysisData] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
+
+  // Fetch user profile from MongoDB on mount to load saved farm details if present
+  useEffect(() => {
+    if (!user || (!user.token && !user._id)) {
+      navigate('/login');
+      return;
+    }
+
+    const loadUserProfile = async () => {
+      try {
+        const token = user.token || localStorage.getItem('token');
+        const res = await axios.get(`${API_URL}/auth/profile`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data && res.data.farmProfile) {
+          const fp = res.data.farmProfile;
+          if (fp.district || fp.crop || fp.areaHectares) {
+            setFormState(prev => ({
+              ...prev,
+              district: fp.district || prev.district,
+              crop: fp.crop || prev.crop,
+              areaHectares: fp.areaHectares || prev.areaHectares,
+              loanTenureYears: fp.loanTenureYears || prev.loanTenureYears,
+              startMonthIndex: fp.startMonthIndex !== undefined ? fp.startMonthIndex : prev.startMonthIndex,
+              cropDurationMonths: fp.cropDurationMonths || prev.cropDurationMonths
+            }));
+          }
+        }
+      } catch (err) {
+        console.warn('Could not load profile from DB:', err.message);
+      }
+    };
+
+    loadUserProfile();
+  }, [navigate]);
 
   // Maharashtra districts list
   const currentDistricts = INDIA_STATES_DISTRICTS.Maharashtra.districts;
@@ -99,7 +128,7 @@ const Dashboard = () => {
   };
 
   // Instant pre-computed estimation calculation for live context sync
-  const areaHa = parseFloat(formState.areaHectares) || 2.5;
+  const areaHa = parseFloat(formState.areaHectares) || 0;
   const estBaseRev = areaHa * 3.5 * 10 * 2275;
   const estCombinedRev = estBaseRev * 2.2;
   const estSafeLoanCap = Math.round(estCombinedRev * 0.60);
@@ -111,15 +140,26 @@ const Dashboard = () => {
   // Construct Dynamic Welcome Message that SYNCs automatically with Form Inputs
   const getDynamicWelcomeMessage = () => {
     const monthName = MONTHS_LIST[formState.startMonthIndex]?.[lang] || 'November';
+    const hasDetails = formState.crop && formState.areaHectares && formState.district;
+
+    if (!hasDetails) {
+      return {
+        role: 'assistant',
+        content: lang === 'en'
+          ? `Hello ${user?.name || 'Farmer'}! 🙏 Welcome to KrishiAI. Please fill out your land details above (District, Crop, Sowing Month, Area) to check your loan eligibility and multi-season succession report.`
+          : `नमस्ते ${user?.name || 'किसान'}! 🙏 किसानAI में आपका स्वागत है। अपनी ऋण पात्रता और फसल उत्तराधिकार रिपोर्ट देखने के लिए कृपया ऊपर अपना भूमि विवरण (जिला, फसल, बुआई का महीना, क्षेत्रफल) दर्ज करें।`
+      };
+    }
+
     if (lang === 'en') {
       return {
         role: 'assistant',
-        content: `Hello! 🙏 I am KrishiAI. Based on your land details (${formState.crop}, ${formState.areaHectares} Ha in ${formState.district}, ${formState.state} sown in ${monthName}), you are eligible for a loan amount of ₹${estSafeLoanCap.toLocaleString('en-IN')}. Next crop sowing is recommended in 1st week of ${nextSowMonthName}. Ask me about PM-Kisan, KCC, or solar pump subsidies!`
+        content: `Hello ${user?.name || 'Farmer'}! 🙏 Based on your land details (${formState.crop}, ${formState.areaHectares} Ha in ${formState.district}, ${formState.state} sown in ${monthName}), you are eligible for a loan amount of ₹${estSafeLoanCap.toLocaleString('en-IN')}. Next crop sowing is recommended in 1st week of ${nextSowMonthName}.`
       };
     }
     return {
       role: 'assistant',
-      content: `नमस्ते! 🙏 मैं किसानAI हूँ। आपके भूमि विवरण (${formState.crop}, ${formState.areaHectares} हेक्टेयर - ${formState.district}, ${formState.state}, बुआई: ${monthName}) के अनुसार, आप ₹${estSafeLoanCap.toLocaleString('en-IN')} की ऋण राशि के लिए पात्र हैं। अगली फसल बुआई ${nextSowMonthName} के पहले सप्ताह में अनुशंसित है। आप मुझसे पीएम-किसान, केसीसी ऋण या सोलर पंप सब्सिडी के बारे में भी पूछ सकते हैं!`
+      content: `नमस्ते ${user?.name || 'किसान'}! 🙏 आपके भूमि विवरण (${formState.crop}, ${formState.areaHectares} हेक्टेयर - ${formState.district}, ${formState.state}, बुआई: ${monthName}) के अनुसार, आप ₹${estSafeLoanCap.toLocaleString('en-IN')} की ऋण राशि के लिए पात्र हैं। अगली फसल बुआई ${nextSowMonthName} के पहले सप्ताह में अनुशंसित है।`
     };
   };
 
@@ -129,7 +169,7 @@ const Dashboard = () => {
   const [chatId, setChatId] = useState(null);
   const chatContainerRef = useRef(null);
 
-  // Synchronize AI Chat Welcome Message when form inputs or language change WITHOUT viewport dragging
+  // Synchronize AI Chat Welcome Message when form inputs change
   useEffect(() => {
     setMessages(prev => {
       const updated = [...prev];
@@ -143,25 +183,25 @@ const Dashboard = () => {
     setFormState(prev => ({ ...prev, areaHectares: newHectares }));
   };
 
-  // Trigger ML Analysis via Backend & Python Service (Silent update without viewport dragging)
+  // Trigger ML Analysis & SAVE farm details to MongoDB
   const handleAnalyzeLand = async (coords = selectedPos, customArea = formState.areaHectares) => {
     setAnalyzing(true);
     try {
       const token = user?.token || localStorage.getItem('token');
-      const areaToUse = parseFloat(customArea) || parseFloat(formState.areaHectares) || 2.5;
+      const areaToUse = parseFloat(customArea) || parseFloat(formState.areaHectares) || 0;
 
       const res = await axios.post(
         `${API_URL}/ai/analyze`,
         {
           state: formState.state,
-          district: formState.district,
-          crop: formState.crop,
-          area_hectares: areaToUse,
+          district: formState.district || 'Ahilyanagar (Ahmednagar)',
+          crop: formState.crop || 'Wheat',
+          area_hectares: areaToUse || 2.5,
           lat: coords[0],
           lon: coords[1],
-          loan_tenure_years: parseInt(formState.loanTenureYears),
-          start_month_index: parseInt(formState.startMonthIndex),
-          current_crop_duration: parseInt(formState.cropDurationMonths)
+          loan_tenure_years: parseInt(formState.loanTenureYears || 1),
+          start_month_index: parseInt(formState.startMonthIndex || 10),
+          current_crop_duration: parseInt(formState.cropDurationMonths || 4)
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -173,9 +213,29 @@ const Dashboard = () => {
       const loanCap = pred?.suggested_loan_limit_rs;
       const nextDecision = res.data.one_year_succession_plan?.next_crop_decision;
 
+      // Save updated farm details to MongoDB Database permanently
+      try {
+        await axios.put(
+          `${API_URL}/auth/profile`,
+          {
+            state: formState.state,
+            district: formState.district,
+            crop: formState.crop,
+            areaHectares: areaToUse,
+            loanTenureYears: formState.loanTenureYears,
+            startMonthIndex: formState.startMonthIndex,
+            cropDurationMonths: formState.cropDurationMonths,
+            suggestedLoanLimit: loanCap
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } catch (saveErr) {
+        console.warn('Failed to save farm details to MongoDB:', saveErr.message);
+      }
+
       const summaryMsg = lang === 'en'
-        ? `🌾 You are eligible for a loan amount of ₹${Math.round(loanCap).toLocaleString('en-IN')}\n\n1. Current ${formState.crop} Income: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. Total Combined Income (${formState.loanTenureYears} Years): ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. Current Crop Harvest: ${MONTHS_LIST[harvestMonthIdx].en}\n4. Recommended Next Crop Sowing Date: ${nextDecision?.recommended_next_sow_date || `1st Week of ${MONTHS_LIST[harvestMonthIdx].en}`} (${nextDecision?.recommended_next_crop || 'Summer Mung Bean'})\n\nWould you like assistance with PM Fasal Bima crop insurance, PM-Kisan, or SBI/NABARD KCC loan application?`
-        : `🌾 आप ₹${Math.round(loanCap).toLocaleString('en-IN')} की ऋण राशि के लिए पात्र हैं\n\n1. वर्तमान ${formState.crop} फसल आय: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. ${formState.loanTenureYears}-वर्षीय कुल संयुक्त आय: ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. कटाई का महीना: ${MONTHS_LIST[harvestMonthIdx].hi}\n4. अनुशंसित अगली फसल बुआई तिथि: ${nextDecision?.recommended_next_sow_date || `${MONTHS_LIST[harvestMonthIdx].hi} का पहला सप्ताह`} (${nextDecision?.recommended_next_crop || 'ग्रीष्मकालीन मूंग दलहन'})\n\nक्या आप पीएम फसल बीमा योजना, पीएम-किसान सम्मान निधि या केसीसी ऋण आवेदन में सहायता चाहते हैं?`;
+        ? `🌾 You are eligible for a loan amount of ₹${Math.round(loanCap).toLocaleString('en-IN')}\n\n1. Current ${formState.crop || 'Crop'} Income: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. Total Combined Income (${formState.loanTenureYears} Years): ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. Current Crop Harvest: ${MONTHS_LIST[harvestMonthIdx].en}\n4. Recommended Next Crop Sowing Date: ${nextDecision?.recommended_next_sow_date || `1st Week of ${MONTHS_LIST[harvestMonthIdx].en}`} (${nextDecision?.recommended_next_crop || 'Summer Mung Bean'})\n\n(Details saved to database successfully)`
+        : `🌾 आप ₹${Math.round(loanCap).toLocaleString('en-IN')} की ऋण राशि के लिए पात्र हैं\n\n1. वर्तमान ${formState.crop || 'फसल'} आय: ₹${pred?.adjusted_estimated_revenue_rs?.toLocaleString('en-IN')}\n2. ${formState.loanTenureYears}-वर्षीय कुल संयुक्त आय: ₹${Math.round(totalCombinedRev).toLocaleString('en-IN')}\n3. कटाई का महीना: ${MONTHS_LIST[harvestMonthIdx].hi}\n4. अनुशंसित अगली फसल बुआई तिथि: ${nextDecision?.recommended_next_sow_date || `${MONTHS_LIST[harvestMonthIdx].hi} का पहला सप्ताह`} (${nextDecision?.recommended_next_crop || 'ग्रीष्मकालीन मूंग दलहन'})\n\n(विवरण डेटाबेस में सफलतापूर्वक सुरक्षित किया गया)`;
 
       setMessages(prev => [...prev, { role: 'assistant', content: summaryMsg }]);
     } catch (err) {
@@ -198,13 +258,12 @@ const Dashboard = () => {
     try {
       const token = user?.token || localStorage.getItem('token');
 
-      // Always send verified inputs + calculated loan limits so AI never asks again
       const payloadContext = analysisData || {
         inputs: {
           state: formState.state,
-          district: formState.district,
-          crop: formState.crop,
-          area_hectares: formState.areaHectares,
+          district: formState.district || 'N/A',
+          crop: formState.crop || 'N/A',
+          area_hectares: formState.areaHectares || '0',
         },
         predictions: {
           adjusted_estimated_revenue_rs: Math.round(estBaseRev),
@@ -236,7 +295,6 @@ const Dashboard = () => {
       setChatId(res.data.chatId);
       setMessages(prev => [...prev, { role: 'assistant', content: res.data.reply }]);
       
-      // Scroll ONLY inside the chat container when user sends a message
       if (chatContainerRef.current) {
         chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
       }
@@ -314,10 +372,12 @@ const Dashboard = () => {
             <h3 className="text-lg font-bold text-[#3D2C1E] flex items-center gap-2">
               <span>📝</span> {t.enterDetailsTitle}
             </h3>
-            <span className="text-xs text-gray-500">{t.step1}</span>
+            <span className="text-xs text-[#2D6A4F] font-bold">
+              {user?.farmProfile?.crop ? '💾 डेटाबेस में सुरक्षित' : t.step1}
+            </span>
           </div>
 
-          {/* Agricultural Inputs - State locked to Maharashtra */}
+          {/* Agricultural Inputs (No hardcoded prefilled values for new accounts) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {/* State (Maharashtra only) */}
             <div>
@@ -331,7 +391,7 @@ const Dashboard = () => {
               </select>
             </div>
 
-            {/* District Select Dropdown */}
+            {/* District Select Dropdown (UNSELECTED default for new users) */}
             <div>
               <label className="block text-xs font-bold text-[#2D6A4F] mb-1">जिला (Select District)</label>
               <select
@@ -339,13 +399,14 @@ const Dashboard = () => {
                 onChange={e => handleDistrictChange(e.target.value)}
                 className="w-full px-3 py-2 border-2 border-[#2D6A4F]/40 rounded-xl text-sm font-bold text-[#3D2C1E] focus:border-[#2D6A4F] focus:outline-none"
               >
+                <option value="">-- जिला चुनें (Select District) --</option>
                 {currentDistricts.map(dist => (
                   <option key={dist.name} value={dist.name}>{dist.name}</option>
                 ))}
               </select>
             </div>
 
-            {/* Q1: What Crop? */}
+            {/* Q1: What Crop? (UNSELECTED default for new users) */}
             <div>
               <label className="block text-xs font-bold text-[#E8630A] mb-1">1. कौन सी फसल? (Crop)</label>
               <select
@@ -353,6 +414,7 @@ const Dashboard = () => {
                 onChange={e => handleCropChange(e.target.value)}
                 className="w-full px-3 py-2 border-2 border-[#E8630A]/40 rounded-xl text-sm font-bold text-[#3D2C1E] focus:border-[#E8630A] focus:outline-none"
               >
+                <option value="">-- फसल चुनें (Select Crop) --</option>
                 <option value="Wheat">{t.wheat} (4 Months)</option>
                 <option value="Rice">{t.rice} (5 Months)</option>
                 <option value="Cotton">{t.cotton} (6 Months)</option>
@@ -392,7 +454,7 @@ const Dashboard = () => {
               </select>
             </div>
 
-            {/* Auto Calculated Land Area */}
+            {/* Land Area Input (EMPTY for new users) */}
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">
                 {t.areaHectares} <span className="text-[10px] text-[#2D6A4F]">({t.calculatedFromMap})</span>
@@ -400,6 +462,7 @@ const Dashboard = () => {
               <input
                 type="number"
                 step="0.1"
+                placeholder="उदा: 2.5"
                 value={formState.areaHectares}
                 onChange={e => setFormState({ ...formState, areaHectares: e.target.value })}
                 className="w-full px-3 py-2 border border-[#2D6A4F] bg-green-50/50 rounded-xl text-sm font-bold text-[#2D6A4F] focus:outline-none"
@@ -426,22 +489,22 @@ const Dashboard = () => {
             setSelectedPos={setSelectedPos}
             onConfirmSelection={handleAnalyzeLand}
             onAreaChange={handleAreaChange}
-            areaHectares={formState.areaHectares}
+            areaHectares={formState.areaHectares || 2.5}
             lang={lang}
             t={t}
           />
         </div>
 
-        {/* NEW FEATURE: 12-Month Satellite NDVI & Weather Trend Chart (Python Service) */}
+        {/* 12-Month Satellite NDVI & Weather Trend Chart (Python Service) */}
         <SatelliteTrendChart
-          district={formState.district}
-          crop={formState.crop}
+          district={formState.district || 'Ahilyanagar (Ahmednagar)'}
+          crop={formState.crop || 'Wheat'}
           t={t}
         />
 
-        {/* NEW FEATURE: Government Kisan Schemes & Subsidies (Python RAG Engine) */}
+        {/* Government Kisan Schemes & Subsidies (Python RAG Engine) */}
         <KisanSchemesCard
-          crop={formState.crop}
+          crop={formState.crop || 'Wheat'}
           state={formState.state}
           lang={lang}
           t={t}
