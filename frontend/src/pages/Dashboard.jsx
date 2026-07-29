@@ -13,7 +13,7 @@ import KisanSchemesCard from '../components/KisanSchemesCard';
 import { translations } from '../utils/translations';
 import { INDIA_STATES_DISTRICTS } from '../utils/indiaDistricts';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'http://localhost:8000/api';
 
 const SendIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
