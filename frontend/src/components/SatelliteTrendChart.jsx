@@ -93,14 +93,31 @@ const SatelliteTrendChart = ({ district = 'Ahilyanagar (Ahmednagar)', crop = 'Wh
       {/* Visual Dual Axis Chart (Bars + SVG Spline Curve) */}
       <div className="relative pt-6 pb-2">
         <div className="h-44 flex items-end justify-between gap-1 sm:gap-2 px-2 border-b border-gray-300 relative">
+          
+          {/* SVG Line Curve connecting NDVI green dots */}
+          <svg className="absolute inset-0 w-full h-44 pointer-events-none z-10 overflow-visible" preserveAspectRatio="none">
+            <polyline
+              fill="none"
+              stroke="#2D6A4F"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              points={monthly.map((m, i) => {
+                const xPct = ((i + 0.5) / 12) * 100;
+                const yPct = 100 - (m.ndvi * 100);
+                return `${xPct}%,${yPct}%`;
+              }).join(' ')}
+            />
+          </svg>
+
           {monthly.map((m, idx) => {
             const rainHeightPct = Math.round((m.rainfall_mm / maxRain) * 100);
             const ndviHeightPct = Math.round(m.ndvi * 100);
 
             return (
-              <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group relative">
+              <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group relative z-20">
                 {/* Tooltip on Hover */}
-                <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col bg-gray-900 text-white text-[10px] p-2 rounded-lg z-20 shadow-lg whitespace-nowrap">
+                <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col bg-gray-900 text-white text-[10px] p-2 rounded-lg z-30 shadow-lg whitespace-nowrap">
                   <span className="font-bold text-amber-300">{m.month}: {m.health_status}</span>
                   <span>🌿 NDVI: {m.ndvi}</span>
                   <span>🌧️ वर्षा: {m.rainfall_mm} mm</span>
@@ -117,7 +134,7 @@ const SatelliteTrendChart = ({ district = 'Ahilyanagar (Ahmednagar)', crop = 'Wh
                   {/* NDVI Vegetation Line Marker Pill (Green) */}
                   <div
                     style={{ bottom: `${ndviHeightPct}%` }}
-                    className="absolute w-3 h-3 bg-[#2D6A4F] border-2 border-white rounded-full shadow-md z-10 transform -translate-y-1/2 group-hover:scale-125 transition-all"
+                    className="absolute w-3.5 h-3.5 bg-[#2D6A4F] border-2 border-white rounded-full shadow-md z-20 transform -translate-y-1/2 group-hover:scale-125 transition-all"
                   />
                 </div>
 

@@ -185,7 +185,7 @@ const FarmlandMap = ({ selectedPos, setSelectedPos, onConfirmSelection, onAreaCh
         style={{ height: '100%', width: '100%' }}
       >
         <TileLayer attribution="Tiles &copy; Esri &mdash; Sentinel-2 RGB Imagery" url={tileUrl} />
-        <FlyToLocation position={pos} />
+        <FlyToLocation position={selectedPos} />
         <PolygonDrawer
           polygonPoints={polygonPoints}
           setPolygonPoints={setPolygonPoints}

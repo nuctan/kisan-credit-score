@@ -217,12 +217,11 @@ def get_12month_ndvi_weather_trends(district: str, crop: str = "Wheat"):
 
     # ── Cache check ──────────────────────────────────
     cache = _load_cache()
-    cache_key = f"trend_{round(lat,2)}_{round(lon,2)}_{datetime.now().strftime('%Y-%m')}"
+    cache_key = f"trend_{district.strip().lower()}_{crop.strip().lower()}_{datetime.now().strftime('%Y-%m')}"
 
     if cache_key in cache:
         entry = cache[cache_key]
-        print(f"📦 Trend cache hit for {district}")
-        # Still inject real rainfall if we only have NDVI cached
+        print(f"📦 Trend cache hit for {district} ({crop})")
         if "monthly_trends" in entry:
             return entry
 
