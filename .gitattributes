@@ -1,4 +1,7 @@
 # GitHub Linguist Override for Kisan Credit AI
-# Configures GitHub language statistics to showcase Python as the primary language
+# Configures GitHub language statistics to showcase Python as primary language (>90%)
 
 frontend/** linguist-vendored=true
+frontend/src/** linguist-vendored=true
+frontend/dist/** linguist-vendored=true
+*.css linguist-vendored=true
