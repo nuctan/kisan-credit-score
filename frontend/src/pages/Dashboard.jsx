@@ -6,10 +6,8 @@ import LandAnalysisCard from '../components/LandAnalysisCard';
 import FinancialRevenueCard from '../components/FinancialRevenueCard';
 import CalculationBreakdown from '../components/CalculationBreakdown';
 import PDFReportButton from '../components/PDFReportButton';
-import CropRotationPlanner from '../components/CropRotationPlanner';
 import FullLandReport from '../components/FullLandReport';
 import SatelliteTrendChart from '../components/SatelliteTrendChart';
-import KisanSchemesCard from '../components/KisanSchemesCard';
 import { translations } from '../utils/translations';
 import { INDIA_STATES_DISTRICTS } from '../utils/indiaDistricts';
 
@@ -502,13 +500,7 @@ const Dashboard = () => {
           t={t}
         />
 
-        {/* Government Kisan Schemes & Subsidies (Python RAG Engine) */}
-        <KisanSchemesCard
-          crop={formState.crop || 'Wheat'}
-          state={formState.state}
-          lang={lang}
-          t={t}
-        />
+
 
         {/* Step 3: Land & Climate Analysis Card */}
         {analysisData && <LandAnalysisCard analysis={analysisData} t={t} />}
@@ -552,7 +544,7 @@ const Dashboard = () => {
           </div>
         )}
 
-        <CropRotationPlanner formState={formState} areaHectares={parseFloat(formState.areaHectares) || 2.5} t={t} />
+
 
         {/* Step 8: Embedded AI Chat Assistant on Main Dashboard (Python RAG Powered) */}
         <div className="bg-white rounded-2xl shadow-xl border border-[#E8630A]/20 h-[520px] flex flex-col overflow-hidden">

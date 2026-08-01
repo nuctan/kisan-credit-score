@@ -53,6 +53,9 @@ const LandAnalysisCard = ({ analysis, t }) => {
             ></div>
           </div>
           <p className="text-xs text-gray-600 font-medium">{ndviDesc}</p>
+          <span className="text-[10px] text-blue-600 font-bold mt-1 bg-blue-50 px-1.5 py-0.5 rounded">
+            📍 आपके खेत का रियल-टाइम GPS रीडिंग (Sentinel-2)
+          </span>
         </div>
 
         {/* 2. Weather */}

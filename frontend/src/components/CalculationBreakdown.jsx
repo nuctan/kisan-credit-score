@@ -5,6 +5,7 @@ const CalculationBreakdown = ({ analysisData, formState, t }) => {
 
   const { baseline_metrics, ai_scores, predictions, one_year_succession_plan } = analysisData;
   const cycles = one_year_succession_plan?.succession_cycles || [];
+  const pricePrediction = baseline_metrics?.price_prediction || {};
 
   const areaHectares = parseFloat(formState?.areaHectares) || 2.5;
   const yieldTonnes = baseline_metrics?.historical_yield_tonnes_per_hectare || 3.5;
@@ -62,8 +63,14 @@ const CalculationBreakdown = ({ analysisData, formState, t }) => {
             <span>Step 1</span>
           </div>
           <p className="text-gray-600">
-            सूत्र: क्षेत्रफल ({areaHectares} Ha) × ऐतिहासिक उपज ({yieldTonnes} टन) × 10 क्विंटल × मंडी मूल्य (₹{mandiPrice})
+            सूत्र: क्षेत्रफल ({areaHectares} Ha) × ऐतिहासिक उपज ({yieldTonnes} टन) × 10 क्विंटल × अनुमानित मंडी मूल्य (₹{mandiPrice})
           </p>
+          {pricePrediction?.harvest_month && (
+            <div className="text-[10px] text-blue-700 bg-blue-50 px-2 py-1 rounded-lg border border-blue-200">
+              <span className="font-bold">📈 अनुमानित मंडी मूल्य:</span>{' '}
+              बुआई ({pricePrediction.sow_month}) → कटाई ({pricePrediction.harvest_month}) | मौसमी गुणांक: {pricePrediction.seasonal_multiplier}x | {pricePrediction.price_trend}
+            </div>
+          )}
           <div className="text-sm font-extrabold text-[#3D2C1E] pt-1 border-t border-gray-200">
             = ₹{Math.round(baseRev).toLocaleString('en-IN')}
           </div>

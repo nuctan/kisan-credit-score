@@ -50,7 +50,11 @@ const SatelliteTrendChart = ({ district = 'Ahilyanagar (Ahmednagar)', crop = 'Wh
               12-माह सैटेलाइट NDVI व वर्षा रुझान (12-Month Satellite NDVI & Weather Chart)
             </h3>
             <p className="text-xs text-gray-500">
-              जिला: <strong className="text-[#E8630A]">{trendData.district}</strong> | फसल: <strong className="text-[#2D6A4F]">{trendData.crop}</strong> (पायथन ML विश्लेषित)
+              जिला: <strong className="text-[#E8630A]">{trendData.district}</strong> | फसल: <strong className="text-[#2D6A4F]">{trendData.crop}</strong>
+            </p>
+            {/* Clarification note */}
+            <p className="text-[10px] text-blue-600 font-semibold mt-0.5 bg-blue-50 px-2 py-0.5 rounded-md inline-block">
+              📍 यह जिले का 12-माह ऐतिहासिक NDVI औसत है — Land Report का NDVI आपके खेत का रियल-टाइम सैटेलाइट रीडिंग है
             </p>
           </div>
         </div>
@@ -67,7 +71,30 @@ const SatelliteTrendChart = ({ district = 'Ahilyanagar (Ahmednagar)', crop = 'Wh
         </div>
       </div>
 
-      {/* Highlights Metrics */}
+      {/* NDVI Interpretation Banner */}
+      {(() => {
+        const ndvi = trendData.mean_ndvi || 0;
+        let badge, color, impact;
+        if (ndvi >= 0.65) {
+          badge = '🟢 उत्कृष्ट (Excellent)';
+          color = 'bg-green-50 border-green-300 text-green-800';
+          impact = 'फसल घनी और हरी है। उत्पादन अधिक होने की संभावना है। बैंक ऋण के लिए सबसे अनुकूल स्थिति।';
+        } else if (ndvi >= 0.40) {
+          badge = '🟡 सामान्य (Moderate)';
+          color = 'bg-yellow-50 border-yellow-300 text-yellow-800';
+          impact = 'फसल सामान्य रूप से बढ़ रही है। उत्पादन ठीक रहेगा लेकिन सिंचाई या उर्वरक से सुधार संभव।';
+        } else {
+          badge = '🔴 कम (Stress / Low Vegetation)';
+          color = 'bg-red-50 border-red-300 text-red-800';
+          impact = 'खेत में कम हरियाली है — संभावित कारण: सूखा, बुआई नहीं हुई, या फसल कटाई के बाद का समय। ऋण जोखिम अधिक।';
+        }
+        return (
+          <div className={`p-3 rounded-xl border text-xs font-semibold ${color}`}>
+            <span className="font-black text-sm">{badge}</span>
+            <p className="mt-1 font-medium opacity-90">फसल पर प्रभाव: {impact}</p>
+          </div>
+        );
+      })()}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="bg-[#FFF8F0] p-3 rounded-xl border border-[#E8630A]/20">
           <span className="text-[11px] text-gray-500 font-bold block mb-0.5">औसत वार्षिक NDVI (Mean NDVI)</span>

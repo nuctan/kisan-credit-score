@@ -228,30 +228,36 @@ STRICT INSTRUCTIONS:
 @app.post("/api/ai/analyze")
 @app.post("/api/predict-revenue")
 def predict_revenue(req: PredictionRequest):
-    historical_data = get_historical_averages(req.state, req.crop)
-    yield_per_hectare = historical_data["historical_yield_tonnes_per_hectare"]
-    price_per_quintal = historical_data["price_rs_per_quintal"]
-    
-    base_revenue = req.area_hectares * yield_per_hectare * 10 * price_per_quintal
-    
-    ndvi_data = get_ndvi_score(req.lat, req.lon, req.crop)
-    weather_data = get_weather_score(req.lat, req.lon)
-    soil_data = get_soil_score(req.state, req.district)
-    
-    adjusted_revenue = calculate_adjusted_revenue(
-        base_revenue, 
-        ndvi_data["score"], 
-        weather_data["score"], 
-        soil_data["score"]
-    )
-    
     tenure_years = req.loan_tenure_years or 1
     start_month_idx = req.start_month_index if req.start_month_index is not None else 10
     crop_duration = req.current_crop_duration or 4
 
+    # Pass sow month so price prediction is for HARVEST month, not current
+    historical_data = get_historical_averages(
+        req.state, req.crop,
+        sow_month_idx=start_month_idx,
+        crop_duration_months=crop_duration
+    )
+    yield_per_hectare = historical_data["historical_yield_tonnes_per_hectare"]
+    price_per_quintal = historical_data["price_rs_per_quintal"]
+    price_prediction = historical_data.get("price_prediction", {})
+
+    base_revenue = req.area_hectares * yield_per_hectare * 10 * price_per_quintal
+
+    ndvi_data = get_ndvi_score(req.lat, req.lon, req.crop)
+    weather_data = get_weather_score(req.lat, req.lon)
+    soil_data = get_soil_score(req.state, req.district)
+
+    adjusted_revenue = calculate_adjusted_revenue(
+        base_revenue,
+        ndvi_data["score"],
+        weather_data["score"],
+        soil_data["score"]
+    )
+
     succession_plan = get_multiyear_crop_succession_plan(
-        req.crop, 
-        req.area_hectares, 
+        req.crop,
+        req.area_hectares,
         adjusted_revenue,
         loan_tenure_years=tenure_years,
         start_month_index=start_month_idx,
@@ -272,7 +278,8 @@ def predict_revenue(req: PredictionRequest):
         "baseline_metrics": {
             "historical_yield_tonnes_per_hectare": yield_per_hectare,
             "market_price_rs_per_quintal": price_per_quintal,
-            "base_estimated_revenue_rs": round(base_revenue, 2)
+            "base_estimated_revenue_rs": round(base_revenue, 2),
+            "price_prediction": price_prediction,
         },
         "ai_scores": {
             "ndvi": ndvi_data,
