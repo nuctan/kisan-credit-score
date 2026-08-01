@@ -371,7 +371,7 @@ const Dashboard = () => {
               <span>📝</span> {t.enterDetailsTitle}
             </h3>
             <span className="text-xs text-[#2D6A4F] font-bold">
-              {user?.farmProfile?.crop ? '💾 डेटाबेस में सुरक्षित' : t.step1}
+              {user?.farmProfile?.crop ? (lang === 'en' ? '💾 Saved in Database' : '💾 डेटाबेस में सुरक्षित') : t.step1}
             </span>
           </div>
 
@@ -391,13 +391,13 @@ const Dashboard = () => {
 
             {/* District Select Dropdown (UNSELECTED default for new users) */}
             <div>
-              <label className="block text-xs font-bold text-[#2D6A4F] mb-1">जिला (Select District)</label>
+              <label className="block text-xs font-bold text-[#2D6A4F] mb-1">{lang === 'en' ? 'District' : 'जिला (Select District)'}</label>
               <select
                 value={formState.district}
                 onChange={e => handleDistrictChange(e.target.value)}
                 className="w-full px-3 py-2 border-2 border-[#2D6A4F]/40 rounded-xl text-sm font-bold text-[#3D2C1E] focus:border-[#2D6A4F] focus:outline-none"
               >
-                <option value="">-- जिला चुनें (Select District) --</option>
+                <option value="">{lang === 'en' ? '-- Select District --' : '-- जिला चुनें (Select District) --'}</option>
                 {currentDistricts.map(dist => (
                   <option key={dist.name} value={dist.name}>{dist.name}</option>
                 ))}
@@ -406,13 +406,13 @@ const Dashboard = () => {
 
             {/* Q1: What Crop? (UNSELECTED default for new users) */}
             <div>
-              <label className="block text-xs font-bold text-[#E8630A] mb-1">1. कौन सी फसल? (Crop)</label>
+              <label className="block text-xs font-bold text-[#E8630A] mb-1">{lang === 'en' ? '1. Which Crop?' : '1. कौन सी फसल? (Crop)'}</label>
               <select
                 value={formState.crop}
                 onChange={e => handleCropChange(e.target.value)}
                 className="w-full px-3 py-2 border-2 border-[#E8630A]/40 rounded-xl text-sm font-bold text-[#3D2C1E] focus:border-[#E8630A] focus:outline-none"
               >
-                <option value="">-- फसल चुनें (Select Crop) --</option>
+                <option value="">{lang === 'en' ? '-- Select Crop --' : '-- फसल चुनें (Select Crop) --'}</option>
                 <option value="Wheat">{t.wheat} (4 Months)</option>
                 <option value="Rice">{t.rice} (5 Months)</option>
                 <option value="Cotton">{t.cotton} (6 Months)</option>
@@ -423,7 +423,7 @@ const Dashboard = () => {
 
             {/* Q2: Crop Sow Time? */}
             <div>
-              <label className="block text-xs font-bold text-[#2D6A4F] mb-1">2. बुआई कब की? (Sowing Month)</label>
+              <label className="block text-xs font-bold text-[#2D6A4F] mb-1">{lang === 'en' ? '2. Sowing Month?' : '2. बुआई कब की? (Sowing Month)'}</label>
               <select
                 value={formState.startMonthIndex}
                 onChange={e => setFormState({ ...formState, startMonthIndex: parseInt(e.target.value) })}
@@ -439,7 +439,7 @@ const Dashboard = () => {
 
             {/* Q3: Loan Till When? */}
             <div>
-              <label className="block text-xs font-bold text-[#E8630A] mb-1">3. कितना ऋण? (Tenure)</label>
+              <label className="block text-xs font-bold text-[#E8630A] mb-1">{lang === 'en' ? '3. Loan Tenure?' : '3. कितना ऋण? (Tenure)'}</label>
               <select
                 value={formState.loanTenureYears}
                 onChange={e => setFormState({ ...formState, loanTenureYears: parseInt(e.target.value) })}
@@ -460,7 +460,7 @@ const Dashboard = () => {
               <input
                 type="number"
                 step="0.1"
-                placeholder="उदा: 2.5"
+                placeholder={lang === 'en' ? 'e.g. 2.5' : 'उदा: 2.5'}
                 value={formState.areaHectares}
                 onChange={e => setFormState({ ...formState, areaHectares: e.target.value })}
                 className="w-full px-3 py-2 border border-[#2D6A4F] bg-green-50/50 rounded-xl text-sm font-bold text-[#2D6A4F] focus:outline-none"
@@ -498,12 +498,13 @@ const Dashboard = () => {
           district={formState.district || 'Ahilyanagar (Ahmednagar)'}
           crop={formState.crop || 'Wheat'}
           t={t}
+          lang={lang}
         />
 
 
 
         {/* Step 3: Land & Climate Analysis Card */}
-        {analysisData && <LandAnalysisCard analysis={analysisData} t={t} />}
+        {analysisData && <LandAnalysisCard analysis={analysisData} t={t} lang={lang} />}
 
         {/* Step 4: Step-by-Step Mathematical Calculation Breakdown Card */}
         {analysisData && (
@@ -511,6 +512,7 @@ const Dashboard = () => {
             analysisData={analysisData}
             formState={formState}
             t={t}
+            lang={lang}
           />
         )}
 
@@ -520,6 +522,7 @@ const Dashboard = () => {
             analysisData={analysisData}
             formState={formState}
             t={t}
+            lang={lang}
           />
         )}
 
@@ -529,6 +532,7 @@ const Dashboard = () => {
             predictions={analysisData.predictions}
             baselineMetrics={analysisData.baseline_metrics}
             t={t}
+            lang={lang}
           />
         )}
 
