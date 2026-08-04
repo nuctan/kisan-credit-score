@@ -45,10 +45,6 @@ const AUTO_CROP_DURATIONS = {
 const Dashboard = () => {
   const navigate = useNavigate();
 
-  // Language State ('hi' for Hindi, 'en' for English)
-  const [lang, setLang] = useState('hi');
-  const t = translations[lang];
-
   // User auth state
   const rawUser = localStorage.getItem('user');
   const user = rawUser ? JSON.parse(rawUser) : null;
@@ -67,7 +63,11 @@ const Dashboard = () => {
   const [selectedPos, setSelectedPos] = useState([19.0958, 74.7496]);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisData, setAnalysisData] = useState(null);
+  const [lang, setLang] = useState('hi');
+  const [chatLang, setChatLang] = useState('hi');
   const [isListening, setIsListening] = useState(false);
+
+  const t = translations[lang] || translations.hi;
 
   // Fetch user profile from MongoDB on mount to load saved farm details if present
   useEffect(() => {
@@ -286,7 +286,7 @@ const Dashboard = () => {
           message: userMessage,
           chatId,
           landContext: payloadContext,
-          lang: lang
+          lang: chatLang
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -323,21 +323,27 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Project Language Switcher Toggle (Hindi / English only) */}
         <div className="flex items-center gap-3">
           <div className="flex items-center bg-[#FFF8F0] p-1 rounded-xl border border-[#E8630A]/30">
-            <span className="text-xs px-2 font-bold text-gray-600 hidden sm:inline">🌐</span>
-            <select
-              value={lang}
-              onChange={e => setLang(e.target.value)}
-              className="bg-white border border-[#E8630A]/30 rounded-lg px-2.5 py-1 text-xs font-bold text-[#3D2C1E] focus:outline-none focus:border-[#E8630A] cursor-pointer"
+            <button
+              type="button"
+              onClick={() => setLang('hi')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                lang === 'hi' ? 'bg-[#E8630A] text-white shadow-sm' : 'text-gray-600 hover:text-black'
+              }`}
             >
-              <option value="hi">🇮🇳 हिंदी (Hindi)</option>
-              <option value="en">🇬🇧 English</option>
-              <option value="mr">🚩 मराठी (Marathi)</option>
-              <option value="gu">🦁 ગુજરાતી (Gujarati)</option>
-              <option value="ta">🏛️ தமிழ் (Tamil)</option>
-              <option value="te">🌾 తెలుగు (Telugu)</option>
-            </select>
+              🇮🇳 हिंदी
+            </button>
+            <button
+              type="button"
+              onClick={() => setLang('en')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                lang === 'en' ? 'bg-[#2D6A4F] text-[#FFF8F0] shadow-sm' : 'text-gray-600 hover:text-black'
+              }`}
+            >
+              🇬🇧 English
+            </button>
           </div>
 
           <div className="hidden md:flex items-center gap-2 text-sm font-semibold text-[#3D2C1E]">
@@ -520,13 +526,29 @@ const Dashboard = () => {
           </div>
         )}
 
+        {/* Step 8: Embedded AI Chat Assistant on Main Dashboard (Python RAG Powered) */}
         <div className="bg-white rounded-2xl shadow-xl border border-[#E8630A]/20 h-[520px] flex flex-col overflow-hidden">
           <div className="p-4 bg-[#2D6A4F] text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-2xl">🌾</span>
               <h3 className="font-bold text-lg">{t.chatHeader}</h3>
             </div>
-            <span className="text-xs bg-white/20 px-2.5 py-1 rounded-full">Groq LLaMA 3.3 + Python RAG ({lang.toUpperCase()})</span>
+            
+            {/* Chatbot Specific 5-Language Selector */}
+            <div className="flex items-center gap-2">
+              <select
+                value={chatLang}
+                onChange={e => setChatLang(e.target.value)}
+                className="bg-white/10 text-white border border-white/20 rounded-lg px-2 py-1 text-xs font-bold focus:outline-none cursor-pointer"
+              >
+                <option value="hi" className="text-black">🇮🇳 हिंदी</option>
+                <option value="en" className="text-black">🇬🇧 English</option>
+                <option value="mr" className="text-black">🚩 मराठी</option>
+                <option value="gu" className="text-black">🦁 ગુજરાતી</option>
+                <option value="ta" className="text-black">🏛️ தமிழ்</option>
+              </select>
+              <span className="text-xs bg-white/20 px-2 py-1 rounded-full hidden sm:inline">Groq LLaMA 3.3</span>
+            </div>
           </div>
 
           <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-[#FFF8F0] to-[#fcf3e8]">
@@ -558,8 +580,8 @@ const Dashboard = () => {
             )}
           </div>
 
-          {/* Input Bar */}
-          <form onSubmit={handleSendChat} className="p-3 bg-[#FFF8F0] border-t flex gap-2">
+          {/* Input Bar with Voice Input (Web Speech API) */}
+          <form onSubmit={handleSendChat} className="p-3 bg-[#FFF8F0] border-t flex gap-2 items-center">
             <input
               type="text"
               value={input}
@@ -567,12 +589,48 @@ const Dashboard = () => {
               placeholder={t.chatPlaceholder}
               className="flex-1 px-4 py-3 bg-white border border-[#E8630A]/20 rounded-xl text-sm focus:outline-none focus:border-[#E8630A]"
             />
+
+            {/* Voice Input Button */}
+            <button
+              type="button"
+              onClick={() => {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                  alert('आपके ब्राउज़र में स्पीच रिकॉग्निशन सपोर्ट नहीं है। कृपया Chrome/Edge का प्रयोग करें।');
+                  return;
+                }
+                const recognition = new SpeechRecognition();
+                const langCodes = { hi: 'hi-IN', en: 'en-US', mr: 'mr-IN', gu: 'gu-IN', ta: 'ta-IN' };
+                recognition.lang = langCodes[chatLang] || 'hi-IN';
+                recognition.interimResults = false;
+
+                recognition.onstart = () => setIsListening(true);
+                recognition.onend = () => setIsListening(false);
+                recognition.onerror = () => setIsListening(false);
+
+                recognition.onresult = (event) => {
+                  const transcript = event.results[0][0].transcript;
+                  setInput(prev => (prev ? prev + ' ' + transcript : transcript));
+                };
+
+                recognition.start();
+              }}
+              className={`p-3 rounded-xl border font-bold transition-all cursor-pointer flex items-center justify-center ${
+                isListening
+                  ? 'bg-red-500 text-white animate-pulse border-red-600 shadow-md'
+                  : 'bg-orange-50 text-[#E8630A] border-[#E8630A]/30 hover:bg-[#E8630A] hover:text-white'
+              }`}
+              title={isListening ? 'सुन रहा है... (Listening...)' : 'बोलकर पूछें (Voice Input)'}
+            >
+              🎤
+            </button>
+
             <button
               type="submit"
               disabled={loadingChat || !input.trim()}
-              className="px-5 bg-[#E8630A] text-white rounded-xl hover:bg-[#d55809] transition flex items-center justify-center cursor-pointer disabled:opacity-50"
+              className="px-5 py-3 bg-[#E8630A] hover:bg-[#d55605] text-white rounded-xl text-sm font-bold disabled:opacity-50 transition cursor-pointer"
             >
-              <SendIcon />
+              {loadingChat ? '...' : (lang === 'en' ? 'Send' : 'भेजें')}
             </button>
           </form>
         </div>

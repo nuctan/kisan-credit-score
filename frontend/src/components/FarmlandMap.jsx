@@ -16,6 +16,23 @@ const farmIcon = L.divIcon({
   iconAnchor: [18, 18],
 });
 
+// Bounding box bounds for Maharashtra State (Lat: 15.60 to 22.05, Lon: 72.60 to 80.90)
+const MAHARASHTRA_BOUNDS = {
+  minLat: 15.60,
+  maxLat: 22.05,
+  minLon: 72.60,
+  maxLon: 80.90
+};
+
+function isInsideMaharashtra(lat, lon) {
+  return (
+    lat >= MAHARASHTRA_BOUNDS.minLat &&
+    lat <= MAHARASHTRA_BOUNDS.maxLat &&
+    lon >= MAHARASHTRA_BOUNDS.minLon &&
+    lon <= MAHARASHTRA_BOUNDS.maxLon
+  );
+}
+
 // Geodesic Polygon Area Calculation in Square Meters (Haversine formula approximation)
 function computePolygonAreaSqMeters(coords) {
   if (!coords || coords.length < 3) return 0;
@@ -40,10 +57,22 @@ function computePolygonAreaSqMeters(coords) {
   return Math.abs(area);
 }
 
-function PolygonDrawer({ polygonPoints, setPolygonPoints, setSelectedPos }) {
+function PolygonDrawer({ polygonPoints, setPolygonPoints, setSelectedPos, lang = 'hi' }) {
   useMapEvents({
     click(e) {
-      const newPt = [e.latlng.lat, e.latlng.lng];
+      const lat = e.latlng.lat;
+      const lon = e.latlng.lng;
+
+      if (!isInsideMaharashtra(lat, lon)) {
+        alert(
+          lang === 'en'
+            ? '⚠️ Selection Restricted: Please select land inside Maharashtra state boundaries only.'
+            : '⚠️ चयन प्रतिबंधित: कृपया केवल महाराष्ट्र राज्य की सीमाओं के भीतर भूमि चुनें।'
+        );
+        return;
+      }
+
+      const newPt = [lat, lon];
       setPolygonPoints(prev => [...prev, newPt]);
       setSelectedPos(newPt);
     },
@@ -55,7 +84,7 @@ function PolygonDrawer({ polygonPoints, setPolygonPoints, setSelectedPos }) {
         <Marker key={idx} position={pt} icon={farmIcon}>
           <Popup>
             <div className="text-center text-xs">
-              <strong>बिंदु #{idx + 1}</strong><br />
+              <strong>{lang === 'en' ? `Point #${idx + 1}` : `बिंदु #${idx + 1}`}</strong><br />
               {pt[0].toFixed(4)}° N, {pt[1].toFixed(4)}° E
             </div>
           </Popup>
@@ -121,14 +150,15 @@ const FarmlandMap = ({ selectedPos, setSelectedPos, onConfirmSelection, onAreaCh
     }
   };
 
-  // Sentinel-2 spectral band simulation
-  const b8_nir = (0.45 + (Math.abs(pos[0] * 1000) % 15) / 100).toFixed(2);
-  const b4_red = (0.09 + (Math.abs(pos[1] * 1000) % 8) / 100).toFixed(2);
-  const simulatedNDVI = ((b8_nir - b4_red) / (parseFloat(b8_nir) + parseFloat(b4_red))).toFixed(2);
-
   const tileUrl = mapType === 'satellite'
     ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
     : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+  // Strict Maharashtra Bounds for Map Container
+  const maharashtraBounds = [
+    [15.60, 72.60],
+    [22.05, 80.90]
+  ];
 
   return (
     <div className="relative w-full h-[420px] md:h-[480px] rounded-2xl overflow-hidden shadow-xl border-2 border-[#E8630A]/30">
@@ -137,87 +167,96 @@ const FarmlandMap = ({ selectedPos, setSelectedPos, onConfirmSelection, onAreaCh
         <span className="text-2xl">🛰️</span>
         <div>
           <h4 className="text-sm font-extrabold text-[#3D2C1E]">
-            {t?.mapTitle || 'Sentinel-2 L2A सैटेलाइट मैपिंग'}
+            {t?.mapTitle || (lang === 'en' ? 'Sentinel-2 L2A Satellite Mapping' : 'Sentinel-2 L2A सैटेलाइट मैपिंग')}
           </h4>
-          <div className="flex items-center gap-2 text-[11px] text-[#2D6A4F] font-bold">
-            <span>B8 (NIR): {b8_nir}</span>
-            <span>|</span>
-            <span>B4 (Red): {b4_red}</span>
-            <span>|</span>
-            <span className="bg-green-100 text-green-800 px-1.5 py-0.5 rounded">NDVI: {simulatedNDVI}</span>
-          </div>
+          <p className="text-[11px] text-gray-500 font-semibold">
+            {lang === 'en' ? '📍 Land selection restricted strictly to Maharashtra boundaries' : '📍 केवल महाराष्ट्र राज्य की सीमाओं के भीतर चयन करें'}
+          </p>
         </div>
       </div>
 
-      {/* Instruction Banner when no polygon is drawn */}
-      {polygonPoints.length < 3 && (
-        <div className="absolute top-16 left-1/2 transform -translate-x-1/2 z-[1000] bg-[#E8630A] text-white px-4 py-2 rounded-full shadow-lg text-xs font-bold animate-bounce flex items-center gap-2 pointer-events-none">
-          <span>👇</span>
-          <span>{lang === 'en' ? 'Click 3 or 4 points on the map to draw your field boundary!' : 'खेत की सीमा बनाने के लिए मानचित्र पर 3-4 स्थानों पर क्लिक करें!'}</span>
-        </div>
-      )}
-
-      {/* Top Right Controls */}
-      <div className="absolute top-3 right-3 z-[1000] flex gap-2">
-        {polygonPoints.length > 0 && (
-          <button
-            type="button"
-            onClick={handleClearPolygon}
-            className="bg-red-500 text-white px-3 py-1.5 rounded-xl shadow text-xs font-bold hover:bg-red-600 transition cursor-pointer"
-          >
-            {t?.clearPolygon || '🧹 सीमा साफ़ करें'}
-          </button>
-        )}
+      {/* Top Right Map Layer Controls */}
+      <div className="absolute top-3 right-3 z-[1000] flex items-center gap-2">
         <button
           type="button"
-          onClick={() => setMapType(mapType === 'satellite' ? 'street' : 'satellite')}
-          className="bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-xl shadow text-xs font-bold text-[#2D6A4F] hover:bg-white transition cursor-pointer border border-gray-200"
+          onClick={() => setMapType('satellite')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer ${
+            mapType === 'satellite' ? 'bg-[#E8630A] text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
+          }`}
         >
-          {mapType === 'satellite' ? (t?.streetView || '🗺️ स्ट्रीट व्यू') : (t?.satelliteView || '🛰️ Sentinel-2 HD View')}
+          {t?.satelliteView || '🛰️ Satellite View'}
+        </button>
+        <button
+          type="button"
+          onClick={() => setMapType('street')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer ${
+            mapType === 'street' ? 'bg-[#2D6A4F] text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
+          }`}
+        >
+          {t?.streetView || '🗺️ Street View'}
         </button>
       </div>
 
-      {/* Leaflet Map */}
+      {/* Leaflet Map Engine with Restricted Bounds */}
       <MapContainer
         center={pos}
-        zoom={14}
-        scrollWheelZoom={true}
-        style={{ height: '100%', width: '100%' }}
+        zoom={13}
+        maxBounds={maharashtraBounds}
+        maxBoundsViscosity={1.0}
+        style={{ width: '100%', height: '100%' }}
+        className="z-0"
       >
-        <TileLayer attribution="Tiles &copy; Esri &mdash; Sentinel-2 RGB Imagery" url={tileUrl} />
-        <FlyToLocation position={selectedPos} />
+        <TileLayer
+          attribution="&copy; Esri World Imagery & OpenStreetMap"
+          url={tileUrl}
+        />
+        <FlyToLocation position={pos} />
         <PolygonDrawer
           polygonPoints={polygonPoints}
           setPolygonPoints={setPolygonPoints}
-          setSelectedPos={setPos}
+          setSelectedPos={setSelectedPos}
+          lang={lang}
         />
       </MapContainer>
 
-      {/* Bottom Floating Bar with Live Calculated Area */}
-      <div className="absolute bottom-3 left-3 right-3 z-[1000] bg-white/95 backdrop-blur-md px-5 py-3 rounded-2xl shadow-2xl flex flex-wrap items-center justify-between gap-3 border border-[#E8630A]/30">
-        <div className="flex items-center gap-4 text-xs">
-          <div>
-            <span className="text-gray-500 font-semibold block">{t?.selectedGps || 'GPS स्थान'}:</span>
-            <span className="font-bold text-[#3D2C1E]">
-              {pos[0].toFixed(4)}° N, {pos[1].toFixed(4)}° E
-            </span>
+      {/* Bottom Floating Farm Statistics & Boundary Actions Toolbar */}
+      <div className="absolute bottom-3 left-3 right-3 z-[1000] bg-white/95 backdrop-blur-md p-3.5 rounded-2xl shadow-2xl border border-[#E8630A]/20 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-[#3D2C1E]">
+          <div className="bg-[#FFF8F0] px-3 py-1.5 rounded-xl border border-[#E8630A]/30">
+            <span className="text-gray-500 font-semibold">{t?.selectedGps || 'GPS'}:</span>{' '}
+            <span className="text-[#E8630A]">{pos[0].toFixed(4)}° N, {pos[1].toFixed(4)}° E</span>
           </div>
-          <div className="h-6 w-px bg-gray-300"></div>
-          <div>
-            <span className="text-gray-500 font-semibold block">{t?.calculatedArea || 'गणित क्षेत्रफल (Area)'}:</span>
-            <span className="font-extrabold text-[#E8630A] text-sm">
-              {calculatedHectares} Ha ({calculatedBigha} Bigha)
-            </span>
+
+          <div className="bg-green-50 px-3 py-1.5 rounded-xl border border-green-300">
+            <span className="text-[#2D6A4F] font-semibold">{t?.calculatedArea || 'Area'}:</span>{' '}
+            <span className="text-[#2D6A4F] text-sm font-black">{calculatedHectares} Ha</span>{' '}
+            <span className="text-xs text-gray-500">({calculatedBigha} Bigha)</span>
           </div>
+
+          <span className="text-[11px] text-gray-500 hidden lg:inline">
+            {t?.drawInstruction || 'Click points to draw farm polygon'}
+          </span>
         </div>
 
-        <button
-          type="button"
-          onClick={handleConfirm}
-          className="px-6 py-2.5 bg-[#E8630A] hover:bg-[#d55809] text-white font-bold text-sm rounded-xl shadow-lg transition cursor-pointer flex items-center gap-2"
-        >
-          <span>{t?.confirmLand || '🎯 इस भूमि का विश्लेषण करें'}</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {polygonPoints.length > 0 && (
+            <button
+              type="button"
+              onClick={handleClearPolygon}
+              className="px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-xs font-bold border border-red-200 transition cursor-pointer"
+            >
+              {t?.clearPolygon || '🧹 Clear Boundary'}
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={handleConfirm}
+            className="px-4 py-2 bg-gradient-to-r from-[#E8630A] to-[#d55605] text-white rounded-xl text-xs font-extrabold shadow-md hover:brightness-110 transition cursor-pointer flex items-center gap-1.5"
+          >
+            <span>🎯</span> {t?.confirmLand || 'Analyze Selected Farmland'}
+          </button>
+        </div>
       </div>
     </div>
   );
