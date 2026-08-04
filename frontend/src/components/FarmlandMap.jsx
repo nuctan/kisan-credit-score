@@ -57,7 +57,7 @@ function computePolygonAreaSqMeters(coords) {
   return Math.abs(area);
 }
 
-function PolygonDrawer({ polygonPoints, setPolygonPoints, setSelectedPos, lang = 'hi' }) {
+function PolygonDrawer({ polygonPoints, setPolygonPoints, lang = 'hi' }) {
   useMapEvents({
     click(e) {
       const lat = e.latlng.lat;
@@ -74,7 +74,7 @@ function PolygonDrawer({ polygonPoints, setPolygonPoints, setSelectedPos, lang =
 
       const newPt = [lat, lon];
       setPolygonPoints(prev => [...prev, newPt]);
-      setSelectedPos(newPt);
+      // Do NOT trigger flyTo on point clicks to prevent map panning away!
     },
   });
 
@@ -197,10 +197,12 @@ const FarmlandMap = ({ selectedPos, setSelectedPos, onConfirmSelection, onAreaCh
         </button>
       </div>
 
-      {/* Leaflet Map Engine with Restricted Bounds */}
+      {/* Leaflet Map Engine with Strict Maharashtra Bounds Constraints */}
       <MapContainer
         center={pos}
-        zoom={13}
+        zoom={12}
+        minZoom={7}
+        maxZoom={18}
         maxBounds={maharashtraBounds}
         maxBoundsViscosity={1.0}
         style={{ width: '100%', height: '100%' }}
@@ -209,12 +211,12 @@ const FarmlandMap = ({ selectedPos, setSelectedPos, onConfirmSelection, onAreaCh
         <TileLayer
           attribution="&copy; Esri World Imagery & OpenStreetMap"
           url={tileUrl}
+          bounds={maharashtraBounds}
         />
-        <FlyToLocation position={pos} />
+        <FlyToLocation position={selectedPos} />
         <PolygonDrawer
           polygonPoints={polygonPoints}
           setPolygonPoints={setPolygonPoints}
-          setSelectedPos={setSelectedPos}
           lang={lang}
         />
       </MapContainer>
