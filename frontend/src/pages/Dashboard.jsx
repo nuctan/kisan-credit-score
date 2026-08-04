@@ -56,17 +56,18 @@ const Dashboard = () => {
   // Form states for Land & Loan Selection (NO HARDCODED DEFAULT VALUES for new accounts)
   const [formState, setFormState] = useState({
     state: 'Maharashtra',
-    district: user?.farmProfile?.district || '',
-    crop: user?.farmProfile?.crop || '',
-    areaHectares: user?.farmProfile?.areaHectares || '',
-    loanTenureYears: user?.farmProfile?.loanTenureYears || 1,
-    startMonthIndex: user?.farmProfile?.startMonthIndex !== undefined ? user.farmProfile.startMonthIndex : 10,
-    cropDurationMonths: user?.farmProfile?.cropDurationMonths || 4
+    district: '',
+    crop: '',
+    areaHectares: '',
+    loanTenureYears: 1,
+    startMonthIndex: 10,
+    cropDurationMonths: 4
   });
 
   const [selectedPos, setSelectedPos] = useState([19.0958, 74.7496]);
-  const [analysisData, setAnalysisData] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [analysisData, setAnalysisData] = useState(null);
+  const [isListening, setIsListening] = useState(false);
 
   // Fetch user profile from MongoDB on mount to load saved farm details if present
   useEffect(() => {
@@ -311,7 +312,6 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-[#FFF8F0] font-sans flex flex-col">
-      {/* Top Navbar with Language Switcher */}
       <header className="bg-white border-b border-[#E8630A]/15 px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm">
         <div className="flex items-center gap-3">
           <span className="text-3xl">🌾</span>
@@ -323,27 +323,21 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Language Switcher Toggle */}
         <div className="flex items-center gap-3">
           <div className="flex items-center bg-[#FFF8F0] p-1 rounded-xl border border-[#E8630A]/30">
-            <button
-              type="button"
-              onClick={() => setLang('hi')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                lang === 'hi' ? 'bg-[#E8630A] text-white shadow-sm' : 'text-gray-600 hover:text-black'
-              }`}
+            <span className="text-xs px-2 font-bold text-gray-600 hidden sm:inline">🌐</span>
+            <select
+              value={lang}
+              onChange={e => setLang(e.target.value)}
+              className="bg-white border border-[#E8630A]/30 rounded-lg px-2.5 py-1 text-xs font-bold text-[#3D2C1E] focus:outline-none focus:border-[#E8630A] cursor-pointer"
             >
-              🇮🇳 हिंदी
-            </button>
-            <button
-              type="button"
-              onClick={() => setLang('en')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                lang === 'en' ? 'bg-[#2D6A4F] text-[#FFF8F0] shadow-sm' : 'text-gray-600 hover:text-black'
-              }`}
-            >
-              🇬🇧 English
-            </button>
+              <option value="hi">🇮🇳 हिंदी (Hindi)</option>
+              <option value="en">🇬🇧 English</option>
+              <option value="mr">🚩 मराठी (Marathi)</option>
+              <option value="gu">🦁 ગુજરાતી (Gujarati)</option>
+              <option value="ta">🏛️ தமிழ் (Tamil)</option>
+              <option value="te">🌾 తెలుగు (Telugu)</option>
+            </select>
           </div>
 
           <div className="hidden md:flex items-center gap-2 text-sm font-semibold text-[#3D2C1E]">
@@ -362,9 +356,7 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Main Single-Page Unified Dashboard View */}
       <main className="flex-grow p-4 md:p-8 max-w-7xl mx-auto w-full space-y-8">
-        {/* Input Details Header */}
         <div className="bg-white p-6 rounded-2xl shadow-md border border-[#E8630A]/15 space-y-4">
           <div className="flex items-center justify-between border-b border-gray-100 pb-3">
             <h3 className="text-lg font-bold text-[#3D2C1E] flex items-center gap-2">
@@ -375,9 +367,7 @@ const Dashboard = () => {
             </span>
           </div>
 
-          {/* Agricultural Inputs (No hardcoded prefilled values for new accounts) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {/* State (Maharashtra only) */}
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1">{t.state}</label>
               <select
@@ -389,7 +379,6 @@ const Dashboard = () => {
               </select>
             </div>
 
-            {/* District Select Dropdown (UNSELECTED default for new users) */}
             <div>
               <label className="block text-xs font-bold text-[#2D6A4F] mb-1">{lang === 'en' ? 'District' : 'जिला (Select District)'}</label>
               <select
@@ -404,7 +393,6 @@ const Dashboard = () => {
               </select>
             </div>
 
-            {/* Q1: What Crop? (UNSELECTED default for new users) */}
             <div>
               <label className="block text-xs font-bold text-[#E8630A] mb-1">{lang === 'en' ? '1. Which Crop?' : '1. कौन सी फसल? (Crop)'}</label>
               <select
@@ -421,7 +409,6 @@ const Dashboard = () => {
               </select>
             </div>
 
-            {/* Q2: Crop Sow Time? */}
             <div>
               <label className="block text-xs font-bold text-[#2D6A4F] mb-1">{lang === 'en' ? '2. Sowing Month?' : '2. बुआई कब की? (Sowing Month)'}</label>
               <select
@@ -437,7 +424,6 @@ const Dashboard = () => {
               </select>
             </div>
 
-            {/* Q3: Loan Till When? */}
             <div>
               <label className="block text-xs font-bold text-[#E8630A] mb-1">{lang === 'en' ? '3. Loan Tenure?' : '3. कितना ऋण? (Tenure)'}</label>
               <select
@@ -452,7 +438,6 @@ const Dashboard = () => {
               </select>
             </div>
 
-            {/* Land Area Input (EMPTY for new users) */}
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">
                 {t.areaHectares} <span className="text-[10px] text-[#2D6A4F]">({t.calculatedFromMap})</span>
@@ -469,7 +454,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Step 2: Interactive Sentinel-2 Map with Dynamic Polygon Area Measurement */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-bold text-[#3D2C1E] flex items-center gap-2">
@@ -493,7 +477,6 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* 12-Month Satellite NDVI & Weather Trend Chart (Python Service) */}
         <SatelliteTrendChart
           district={formState.district || 'Ahilyanagar (Ahmednagar)'}
           crop={formState.crop || 'Wheat'}
@@ -501,12 +484,7 @@ const Dashboard = () => {
           lang={lang}
         />
 
-
-
-        {/* Step 3: Land & Climate Analysis Card */}
         {analysisData && <LandAnalysisCard analysis={analysisData} t={t} lang={lang} />}
-
-        {/* Step 4: Step-by-Step Mathematical Calculation Breakdown Card */}
         {analysisData && (
           <CalculationBreakdown
             analysisData={analysisData}
@@ -515,8 +493,6 @@ const Dashboard = () => {
             lang={lang}
           />
         )}
-
-        {/* Step 5: Multi-Year Crop Succession & Next Crop Sowing Decision Report */}
         {analysisData && (
           <FullLandReport
             analysisData={analysisData}
@@ -525,8 +501,6 @@ const Dashboard = () => {
             lang={lang}
           />
         )}
-
-        {/* Step 6: Financial Revenue & Safe Credit Cap Card */}
         {analysisData && (
           <FinancialRevenueCard
             predictions={analysisData.predictions}
@@ -535,8 +509,6 @@ const Dashboard = () => {
             lang={lang}
           />
         )}
-
-        {/* Step 7: PDF Report Button & Dynamic Crop Rotation Planner */}
         {analysisData && (
           <div className="flex justify-center pt-2">
             <PDFReportButton
@@ -548,9 +520,6 @@ const Dashboard = () => {
           </div>
         )}
 
-
-
-        {/* Step 8: Embedded AI Chat Assistant on Main Dashboard (Python RAG Powered) */}
         <div className="bg-white rounded-2xl shadow-xl border border-[#E8630A]/20 h-[520px] flex flex-col overflow-hidden">
           <div className="p-4 bg-[#2D6A4F] text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -560,7 +529,6 @@ const Dashboard = () => {
             <span className="text-xs bg-white/20 px-2.5 py-1 rounded-full">Groq LLaMA 3.3 + Python RAG ({lang.toUpperCase()})</span>
           </div>
 
-          {/* Chat Body Container with Scroll Ref */}
           <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-[#FFF8F0] to-[#fcf3e8]">
             {messages.map((msg, idx) => (
               <div
