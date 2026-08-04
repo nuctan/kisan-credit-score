@@ -57,7 +57,7 @@ function computePolygonAreaSqMeters(coords) {
   return Math.abs(area);
 }
 
-function PolygonDrawer({ polygonPoints, setPolygonPoints }) {
+function PolygonDrawer({ polygonPoints, setPolygonPoints, lang = 'hi' }) {
   useMapEvents({
     click(e) {
       const lat = e.latlng.lat;
