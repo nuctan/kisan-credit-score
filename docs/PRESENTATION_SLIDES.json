@@ -1,0 +1,129 @@
+{
+  "presentation": {
+    "title": "KisanAI: Autonomous Agricultural Credit Assessment Platform",
+    "subtitle": "Satellite Telemetry, Econometric Forecasting & RAG Intelligence for Farmer Credit Evaluation",
+    "time_limit": "5-10 Minutes",
+    "total_slides": 10,
+    "team": [
+      "Tanishq Kanthed (Nuctan) - Frontend Architecture & GIS UI",
+      "Akshat Srivastava - Satellite Pipeline & RAG Engine",
+      "Radhika Yadav - Credit Scoring Models & Groq AI Integration"
+    ]
+  },
+  "slides": [
+    {
+      "slide_number": 1,
+      "title": "KisanAI: Autonomous Agricultural Credit Assessment Platform",
+      "layout": "Title Slide",
+      "content": {
+        "heading": "KisanAI — AI & Satellite-Based Kisan Credit Assessment",
+        "subheading": "Solving Agrarian Credit Underwriting via Sentinel-2 Remote Sensing & MLOps",
+        "presented_by": "Project Group: Tanishq Kanthed, Akshat Srivastava, Radhika Yadav",
+        "guide": "Department of Computer Science & Engineering"
+      }
+    },
+    {
+      "slide_number": 2,
+      "title": "Problem Statement",
+      "layout": "Problem / Challenges",
+      "content": {
+        "key_points": [
+          "Traditional Bank Inspections are Slow & Expensive: Physical field visits cost ₹5,000–₹10,000 per audit and take weeks.",
+          "High Subjectivity & Human Bias: Visual evaluations vary drastically across bank field officers.",
+          "Agrarian Debt Traps: Lenders issue credit limits based on land real-estate value rather than true biological crop yield capacity.",
+          "Static Mandi Pricing Flaw: Traditional models use static annual averages, ignoring harvest-month price drops."
+        ]
+      }
+    },
+    {
+      "slide_number": 3,
+      "title": "Objectives of the System",
+      "layout": "Objectives & Goals",
+      "content": {
+        "key_points": [
+          "Objective 1: Provide interactive GIS mapping (Leaflet + Esri) with automated polygon field area calculation in Hectares & Bigha.",
+          "Objective 2: Ingest real-time Sentinel-2 L2A satellite telemetry to assess biological vegetation health (NDVI).",
+          "Objective 3: Implement harvest-month seasonal mandi price forecasting model.",
+          "Objective 4: Synthesize satellite, weather, and soil data into a weighted risk multiplier (NDVI 45% + Weather 35% + Soil 20%).",
+          "Objective 5: Enforce a strict 60% Safe Credit Limit Cap to prevent farmer insolvency.",
+          "Objective 6: Deliver a multilingual voice-enabled AI Chatbot (Groq LLaMA 3.3 70B + RAG) for government scheme guidance."
+        ]
+      }
+    },
+    {
+      "slide_number": 4,
+      "title": "System Methodology & Technical Stack",
+      "layout": "Architecture & Technologies",
+      "content": {
+        "frontend": "React 18 + Vite 6 + TailwindCSS v4 + Leaflet.js (Web Mercator Projection)",
+        "backend": "100% Pure Python FastAPI (Uvicorn ASGI) — Direct ML memory execution",
+        "database": "MongoDB BSON + Polymorphic Python In-Memory Fallback Store",
+        "apis_and_models": "ESA Sentinel Hub v3 (Sentinel-2 L2A), Open-Meteo Weather, Groq LPU (LLaMA 3.3 70B)"
+      }
+    },
+    {
+      "slide_number": 5,
+      "title": "GIS Telemetry & Satellite Remote Sensing",
+      "layout": "Module Highlight — GIS & Remote Sensing",
+      "content": {
+        "gis_mapping": "Leaflet.js + Esri World Imagery tiles (100% Free, zero Google API billing dependencies).",
+        "area_formula": "Spherical Excess Geodesic Formula: Area = (R^2/4) * Σ (Δλ) * (2 + sin φ1 + sin φ2)",
+        "ndvi_formula": "NDVI = (Band 8 NIR - Band 4 Red) / (Band 8 NIR + Band 4 Red)",
+        "caching": "7-Day JSON cache key based on 1km GPS grid resolution."
+      }
+    },
+    {
+      "slide_number": 6,
+      "title": "Credit Scoring Engine & Math Formulas",
+      "layout": "Module Highlight — Credit Scoring Math",
+      "content": {
+        "step_1_base_rev": "Base Rev = Area (Ha) * Historical Yield (T/Ha) * 10 * Predicted Harvest Mandi Price",
+        "step_2_risk_adj": "Adjusted Rev = Base Rev * [(NDVI * 0.45) + (Weather * 0.35) + (Soil * 0.20)]",
+        "step_3_succession": "Multi-Year Crop Succession Engine (e.g. Wheat -> Nitrogen-fixing Mung Bean -> Rice)",
+        "step_4_safe_cap": "Safe Credit Cap = Total Multi-Season Combined Income * 60% (DSCR Rule)"
+      }
+    },
+    {
+      "slide_number": 7,
+      "title": "Seasonal Mandi Price Forecasting Model",
+      "layout": "Econometric Model",
+      "content": {
+        "harvest_month_calc": "t_harvest = (t_sow + duration) mod 12",
+        "price_formula": "Predicted Price = Base Historical Price * Seasonal Index [C, t_harvest]",
+        "example": "Wheat sown in November (idx=10), duration 4 months -> Harvests in March (idx=2). March Index = 1.05x -> Predicted Price = ₹3,096.98 / Quintal.",
+        "benefit": "Reflects true market availability at harvest time instead of static annual averages."
+      }
+    },
+    {
+      "slide_number": 8,
+      "title": "Government Schemes RAG & Voice AI Chatbot",
+      "layout": "AI & RAG Module",
+      "content": {
+        "rag_engine": "Keyword/token overlap search over 7 verified government schemes (PM-KISAN, KCC, PMFBY, PM-KUSUM, etc.)",
+        "llm_hardware": "Meta LLaMA 3.3 70B on Groq LPU (Language Processing Unit) — Sub-300ms latency (>300 tokens/sec)",
+        "context_prompt": "Dynamic System Prompt injects Farm Profile + ML Loan Cap + RAG context to prevent hallucinations",
+        "voice_support": "Web Speech API microphone integration with 5 regional language support"
+      }
+    },
+    {
+      "slide_number": 9,
+      "title": "Future Scope",
+      "layout": "Future Enhancements",
+      "content": {
+        "expansion": "Pan-India Expansion: Scaling historical yield datasets beyond Maharashtra to all 28 states.",
+        "radar_integration": "Sentinel-1 Synthetic Aperture Radar (SAR) integration to penetrate heavy monsoon clouds.",
+        "blockchain": "Issuing tamper-proof, satellite-verified Credit Passport NFTs / Certificates for instant bank API verification."
+      }
+    },
+    {
+      "slide_number": 10,
+      "title": "Conclusion",
+      "layout": "Conclusion & Summary",
+      "content": {
+        "summary": "KisanAI successfully eliminates manual bank field visits by providing automated, satellite-verified credit risk evaluations in under 30 seconds.",
+        "impact": "Protects financial institutions against bad loans while empowering smallholder farmers with fair, transparent credit limits.",
+        "thank_you": "Thank You! Questions & Discussion."
+      }
+    }
+  ]
+}
