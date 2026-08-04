@@ -66,8 +66,8 @@ function PolygonDrawer({ polygonPoints, setPolygonPoints, lang = 'hi' }) {
       if (!isInsideMaharashtra(lat, lon)) {
         alert(
           lang === 'en'
-            ? '⚠️ Selection Restricted: Please select land inside Maharashtra state boundaries only.'
-            : '⚠️ चयन प्रतिबंधित: कृपया केवल महाराष्ट्र राज्य की सीमाओं के भीतर भूमि चुनें।'
+            ? 'ℹ️ We are currently working on expanding to your state! Right now, satellite credit valuation is active for Maharashtra.'
+            : 'ℹ️ हम वर्तमान में आपके राज्य में विस्तार पर काम कर रहे हैं! अभी के लिए, सैटेलाइट क्रेडिट मूल्यांकन केवल महाराष्ट्र के लिए सक्रिय है।'
         );
         return;
       }
@@ -197,21 +197,18 @@ const FarmlandMap = ({ selectedPos, setSelectedPos, onConfirmSelection, onAreaCh
         </button>
       </div>
 
-      {/* Leaflet Map Engine with Strict Maharashtra Bounds Constraints */}
+      {/* Leaflet Map Engine - Unbound Panning with Friendly State Notice */}
       <MapContainer
         center={pos}
         zoom={12}
-        minZoom={7}
+        minZoom={3}
         maxZoom={18}
-        maxBounds={maharashtraBounds}
-        maxBoundsViscosity={1.0}
         style={{ width: '100%', height: '100%' }}
         className="z-0"
       >
         <TileLayer
           attribution="&copy; Esri World Imagery & OpenStreetMap"
           url={tileUrl}
-          bounds={maharashtraBounds}
         />
         <FlyToLocation position={selectedPos} />
         <PolygonDrawer
