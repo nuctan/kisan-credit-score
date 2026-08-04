@@ -57,24 +57,13 @@ function computePolygonAreaSqMeters(coords) {
   return Math.abs(area);
 }
 
-function PolygonDrawer({ polygonPoints, setPolygonPoints, lang = 'hi' }) {
+function PolygonDrawer({ polygonPoints, setPolygonPoints }) {
   useMapEvents({
     click(e) {
       const lat = e.latlng.lat;
       const lon = e.latlng.lng;
-
-      if (!isInsideMaharashtra(lat, lon)) {
-        alert(
-          lang === 'en'
-            ? 'ℹ️ We are currently working on expanding to your state! Right now, satellite credit valuation is active for Maharashtra.'
-            : 'ℹ️ हम वर्तमान में आपके राज्य में विस्तार पर काम कर रहे हैं! अभी के लिए, सैटेलाइट क्रेडिट मूल्यांकन केवल महाराष्ट्र के लिए सक्रिय है।'
-        );
-        return;
-      }
-
       const newPt = [lat, lon];
       setPolygonPoints(prev => [...prev, newPt]);
-      // Do NOT trigger flyTo on point clicks to prevent map panning away!
     },
   });
 
@@ -144,6 +133,18 @@ const FarmlandMap = ({ selectedPos, setSelectedPos, onConfirmSelection, onAreaCh
   };
 
   const handleConfirm = () => {
+    // Check if selected points fall outside Maharashtra state boundary
+    const isOutside = polygonPoints.some(pt => !isInsideMaharashtra(pt[0], pt[1])) || !isInsideMaharashtra(pos[0], pos[1]);
+
+    if (isOutside) {
+      alert(
+        lang === 'en'
+          ? 'ℹ️ We are currently working on expanding our ML calculation model to your state! Right now, complete satellite valuation models are active for Maharashtra.'
+          : 'ℹ️ हम वर्तमान में आपके राज्य के लिए अपने ML मॉडल का विस्तार कर रहे हैं! अभी के लिए, संपूर्ण सैटेलाइट क्रेडिट मूल्यांकन मॉडल केवल महाराष्ट्र के लिए सक्रिय हैं।'
+      );
+      return;
+    }
+
     setSelectedPos(pos);
     if (onConfirmSelection) {
       onConfirmSelection(pos, parseFloat(calculatedHectares));
