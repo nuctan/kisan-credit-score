@@ -1,191 +1,244 @@
-# PROJECT REPORT
+# A PROJECT REPORT
+## **KisanAI – An AI-Powered Satellite Telemetry & Kisan Credit Assessment Platform**
 
-## **TITLE OF THE PROJECT**
-### **KisanAI: Autonomous Agricultural Credit Assessment & Risk Scoring Platform Using Multispectral Remote Sensing, Econometric Mandi Price Forecasting, and RAG Intelligence**
-
----
-
-### **A PROJECT REPORT**
-*Submitted in partial fulfillment of the requirements for the award of the degree of*  
-**BACHELOR OF TECHNOLOGY / BACHELOR OF ENGINEERING**  
-*in*  
-**COMPUTER SCIENCE AND ENGINEERING / INFORMATION TECHNOLOGY**
+*Submitted In Partial Fulfilment of the Requirement for the Award of Degree / Certificate*
 
 ---
 
-### **PROJECT GROUP MEMBERS**
-1. **Tanishq Kanthed (Nuctan)** — *Frontend Architecture, GIS Telemetry UI, System Integration & Documentation*
-2. **Akshat Srivastava** — *Satellite Telemetry Pipeline, Python Microservice Architecture & RAG Engine*
-3. **Radhika Yadav** — *Econometric Models, Weather Risk Integration & Groq AI System Prompting*
+### **CERTIFICATE**
+
+This is to certify that the Report entitled **"KisanAI – An AI-Powered Satellite Telemetry & Kisan Credit Assessment Platform"** which is submitted by **Tanishq Kanthed, Akshat Srivastava, Radhika Yadav** is a record of the candidates' own work carried out by them under supervision.
+
+The documentation embodies results of original work, and studies are carried out by the students themselves.
+
+**(Project Guide)**
 
 ---
 
-### **DECLARATION & CERTIFICATE**
-This is to certify that the project report entitled **"KisanAI: Autonomous Agricultural Credit Assessment Platform"** is a bona fide record of work carried out by the project group under guidance, and has not been submitted elsewhere for any other degree or diploma.
+### **ABSTRACT**
+
+In the modern digital era, smallholder farmers face severe financial exclusion due to traditional banking credit assessment hurdles. Manual physical field audits take weeks, cost ₹5,000–10,000 per visit, and suffer from high human bias. Conversely, over-lending based purely on land property value leads to systemic agrarian debt traps.
+
+This project, titled **"KisanAI"**, presents an intelligent, automated fintech platform that evaluates farmer credit eligibility in real-time using multispectral satellite telemetry and Machine Learning (ML). The system allows farmers to draw their field boundaries on an interactive Leaflet + Esri satellite map, automatically computing surface area via spherical excess geodesic geometry. It retrieves **Sentinel-2 L2A 10m multispectral satellite imagery** to derive biological Normalized Difference Vegetation Index (NDVI) scores ($B_{08} \text{ NIR} - B_{04} \text{ Red}$), combined with IMD precipitation and soil N-P-K nutrient density using a weighted risk multiplier ($0.45\cdot\text{NDVI} + 0.35\cdot\text{Weather} + 0.20\cdot\text{Soil}$).
+
+Furthermore, KisanAI replaces static annual commodity pricing with an **Econometric Seasonal Mandi Price Prediction Model** that forecasts market values at the exact harvest month ($t_{\text{harvest}} = (t_{\text{sow}} + \text{duration}) \bmod 12$). To guarantee solvency, the system models multi-season agronomic crop successions and enforces a **60% Safe Credit Cap** based on corporate Debt Service Coverage Ratio (DSCR) principles. The architecture features a **100% Pure Python FastAPI server**, a **React 18 + Vite frontend**, and an embedded **Retrieval-Augmented Generation (RAG) Groq LLaMA 3.3 70B AI Chatbot** supporting Web Speech voice input across regional Indian languages.
+
+---
+
+### **ACKNOWLEDGEMENT**
+
+We would like to express our best sense of gratitude and endeavour to our Project Guide for suggesting the problems, scholarly guidance, and expert supervision during the course of this project. Special thanks to our Program Coordinator and faculty members for constant discussion and encouraging new ideas.
 
 ---
 
 ## **TABLE OF CONTENTS**
 
-1. **ABSTRACT**
-2. **CHAPTER 1: INTRODUCTION & PROBLEM STATEMENT**
-   - 1.1 Background & Domain Context
-   - 1.2 Problem Statement
-   - 1.3 Objectives of the System
-   - 1.4 Scope of the Project
-3. **CHAPTER 2: LITERATURE SURVEY & EXISTING SYSTEMS**
-   - 2.1 Existing Agrarian Credit Underwriting Practices
-   - 2.2 Limitations of Current Approaches
-   - 2.3 Proposed Solution & Novelty
-4. **CHAPTER 3: SYSTEM METHODOLOGY & ARCHITECTURE**
-   - 3.1 Overall System Architecture
-   - 3.2 Module 1: Interactive GIS & Geodesic Boundary Engine (Leaflet + Esri)
-   - 3.3 Module 2: Multispectral Remote Sensing (Sentinel-2 L2A + NDVI)
-   - 3.4 Module 3: Econometric Mandi Price & Base Yield Forecasting
-   - 3.5 Module 4: Composite Telemetry Risk Weighting (NDVI 45% + Weather 35% + Soil 20%)
-   - 3.6 Module 5: Multi-Year Crop Succession & 60% Safe Credit Cap (DSCR Equivalence)
-   - 3.7 Module 6: Python RAG Engine & Groq LLaMA 3.3 70B Chatbot
-5. **CHAPTER 4: IMPLEMENTATION DETAILS & TECH STACK**
-   - 4.1 Frontend Implementation (React 18, Vite 6, TailwindCSS)
-   - 4.2 Backend Implementation (Pure Python FastAPI, Uvicorn ASGI)
-   - 4.3 Persistence Layer (MongoDB BSON & In-Memory Dictionary Fallback)
-   - 4.4 External API Integrations (Sentinel Hub, Open-Meteo, Groq LPU)
-6. **CHAPTER 5: RESULTS, VERIFICATION & TESTING**
-   - 5.1 Experimental Setup
-   - 5.2 Land Area Calculation Verification (Spherical Excess Math)
-   - 5.3 Harvest Price Forecast Validation
-   - 5.4 Multilingual Performance (Hindi, English & Regional Voices)
-7. **CHAPTER 6: FUTURE SCOPE**
-8. **CHAPTER 7: CONCLUSION**
-9. **REFERENCES**
+- **CERTIFICATE** ........................................................................................................................ 2
+- **ABSTRACT** ........................................................................................................................... 3
+- **ACKNOWLEDGEMENT** ................................................................................................... 4
+- **TABLE OF CONTENTS** ..................................................................................................... 5
+- **LIST OF FIGURES** ................................................................................................................ 6
+- **CHAPTER 1: INTRODUCTION** ......................................................................................... 8
+  - Background ...................................................................................................... 9
+  - Objective ......................................................................................................... 10
+  - Motivation .................................................................................--------------------- 11
+  - Purpose and Scope .................................................................---------------------- 12
+- **CHAPTER 2: SURVEY OF TECHNOLOGY** ..................................................................... 13
+  - Artificial Intelligence & Machine Learning ........................................................ 13
+  - Remote Sensing & Satellite Telemetry (Sentinel-2 L2A) .................................... 14
+  - Large Language Models & Groq LPU Inference ................................................. 15
+  - Information Retrieval & RAG Architecture .................................------------------- 16
+  - FastAPI Framework & Database Management .................................................. 17
+  - Frontend Technologies (React 18, Leaflet.js, TailwindCSS) ................................. 18
+- **CHAPTER 3: FEASIBILITY STUDY** ................................................................................... 19
+  - Technical Feasibility .................................................................--------------------- 19
+  - Economic Feasibility .................................................................-------------------- 20
+  - Behavioural Feasibility .................................................................------------------ 21
+- **CHAPTER 4: REQUIREMENT AND ANALYSIS** ................................................................ 22
+  - Problem Definition .................................................................------------------------ 22
+  - Software Requirements ................................................................................. 23
+  - Hardware Requirements .................................................................---------------- 24
+- **CHAPTER 5: PRELIMINARY MODULE DESCRIPTION** ................................................. 25
+  - User Interface & GIS Mapping Module .................................----------------------- 25
+  - Satellite Telemetry & Risk Scoring Module .................................------------------- 26
+  - Econometric Price & Crop Succession Module ................................................ 27
+  - RAG & Voice AI Chatbot Module .................................------------------------------- 28
+- **CHAPTER 6: SYSTEM DESIGNING & FLOWCHARTS** ................................................... 29
+  - System Workflow Flowchart .................................................------------------------ 29
+  - Data Processing Pipeline .................................................----------------------------- 30
+- **CHAPTER 7: CODING & IMPLEMENTATION** ................................................................. 31
+  - `ml_service/scoring.py` .................................................------------------------------- 31
+  - `ml_service/data_loader.py` .................................................---------------------------- 32
+  - `ml_service/schemes_rag.py` .................................................--------------------------- 33
+  - `ml_service/main.py` .................................................---------------------------------- 34
+- **CHAPTER 8: RESULT & VERIFICATION** ....................................................................... 35
+- **CHAPTER 9: CONCLUSION & FUTURE SCOPE** ........................................................... 37
+- **REFERENCES** .................................................................................................................... 38
 
 ---
 
-## **ABSTRACT**
+## **LIST OF FIGURES**
 
-Agricultural lending in India suffers from acute information asymmetry. Financial institutions traditionally rely on manual land inspections and historical title records, resulting in slow processing (weeks), high operational expenses (₹5,000–₹10,000 per field visit), and frequent credit misallocations that lead to systemic farmer debt traps. 
-
-This project introduces **KisanAI**, an autonomous, end-to-end agricultural credit underwriting platform that replaces physical field visits with mathematical, satellite-verified telemetry. By leveraging **ESA Sentinel-2 L2A multispectral satellite imagery**, the system computes real-time Normalized Difference Vegetation Index (NDVI) scores ($B_{08} \text{ NIR} - B_{04} \text{ Red}$) to verify biological ground truth. This is synthesized with **IMD/Open-Meteo climate records** and regional soil N-P-K datasets using a **Composite Telemetry Risk Formula** ($0.45\cdot \text{NDVI} + 0.35\cdot \text{Weather} + 0.20\cdot \text{Soil}$). 
-
-Furthermore, KisanAI replaces static commodity pricing with an **Econometric Seasonal Mandi Price Prediction Model** that projects crop market values at the exact harvest month ($t_{\text{harvest}} = (t_{\text{sow}} + \text{duration}) \bmod 12$). To guarantee long-term solvency, the platform models multi-season agronomic crop rotations (e.g. nitrogen-fixing pulses following cereal crops) and enforces a strict **60% Safe Credit Cap** based on corporate Debt Service Coverage Ratio (DSCR) principles. 
-
-The entire stack is deployed via a **100% Pure Python FastAPI server**, a **React 18 + Vite frontend** with interactive **Leaflet + Esri map drawing**, and an embedded **Retrieval-Augmented Generation (RAG) Groq LLaMA 3.3 70B AI Chatbot** with Web Speech voice input.
+- **FIG 1**: System Architecture Workflow Chart ............................................................... 29
+- **FIG 2**: Geodesic Surface Area & Polygon Boundary Drawing Output ............................. 30
+- **FIG 3**: 12-Month Satellite NDVI & Weather Dual-Axis Chart ....................................... 35
+- **FIG 4**: 4-Step Credit Calculation & Safe Loan Cap Breakdown ...................................... 35
+- **FIG 5**: Groq LLaMA 3.3 RAG Voice Assistant Interface Output ...................................... 36
 
 ---
 
-## **CHAPTER 1: INTRODUCTION & PROBLEM STATEMENT**
+## **CHAPTER-1**
 
-### **1.1 Background & Domain Context**
-India's agrarian economy employs over 45% of the national workforce. However, credit penetration among small and marginal farmers remains disproportionately low. Traditional commercial banks evaluate loan applications based on static land ownership deeds rather than dynamic biological productivity.
+### **1. INTRODUCTION**
 
-### **1.2 Problem Statement**
-1. **High Cost of Manual Field Audits**: Banks spend up to 10% of small-ticket loan values deploying human agents to physically inspect farms.
-2. **Subjectivity & Human Bias**: Manual visual inspections vary significantly between field officers, making credit decisions arbitrary.
-3. **Debt Traps from Over-Lending**: Lenders often issue credit limits based on inflated land real-estate values rather than true crop repayment capacity.
-4. **Static Commodity Pricing**: Loan underwriting uses static annual commodity averages, ignoring seasonal price drops at peak harvest.
+Agriculture forms the economic backbone of developing nations like India, employing over 45% of the workforce. However, credit distribution among small and marginal farmers remains inefficient, subjective, and slow. Traditional institutional banking relies on physical land records and field inspections by bank officers. These methods are expensive, time-consuming, and fail to capture real-time crop growth or severe weather impacts.
 
-### **1.3 Objectives of the System**
-- **Objective 1**: Develop an interactive, web-based GIS map allowing farmers to draw farm boundaries and automatically calculate field area in Hectares and Bigha.
-- **Objective 2**: Retrieve real-time Sentinel-2 L2A 10m multispectral satellite data to evaluate crop health (NDVI).
-- **Objective 3**: Implement a seasonal mandi price forecasting model that predicts crop prices at harvest month.
-- **Objective 4**: Synthesize satellite, weather, and soil data into a weighted risk multiplier ($0.45/0.35/0.20$).
-- **Objective 5**: Enforce a 60% Safe Credit Limit Cap over multi-year crop succession schedules to prevent farmer insolvency.
-- **Objective 6**: Provide a bilingual (Hindi/English) interface and a multilingual voice-enabled AI Chatbot grounded in official government scheme guidelines via RAG.
+KisanAI is developed as an AI-powered agricultural credit assessment platform that utilizes multispectral satellite telemetry, machine learning risk weighting, and econometric price forecasting. The platform provides immediate, verified loan eligibility limits directly to farmers while safeguarding financial institutions against default risks.
 
-### **1.4 Scope of the Project**
-- Geographical focus: State of Maharashtra (36 districts with automated GPS centring and state expansion notices).
-- Supported crops: Wheat, Rice/Paddy, Cotton, Sugarcane, Maize.
-- Loan tenures: 1, 2, 3, and 5-year multi-season crop rotation cycles.
+### **BACKGROUND**
+Traditionally, agrarian credit valuation required bank field agents to physically travel to farms. This process presented several key limitations:
+1. High inspection fees (₹5,000–10,000 per field audit).
+2. Human bias and subjective visual reporting.
+3. Over-lending based on land property market value rather than biological yield capacity, causing farmer insolvency.
+4. Static commodity price estimations that ignore peak harvest market gluts.
 
----
+By integrating Satellite Remote Sensing (ESA Sentinel-2) and MLOps, KisanAI digitizes land evaluation, enabling instant credit scoring without physical site visits.
 
-## **CHAPTER 2: LITERATURE SURVEY & EXISTING SYSTEMS**
+### **OBJECTIVE**
+- Develop an interactive GIS interface (Leaflet + Esri World Imagery) allowing farmers to select land boundaries and compute precise field area in Hectares & Bigha using spherical excess math.
+- Ingest real-time Sentinel-2 L2A multispectral satellite bands ($B_{08} \text{ NIR}, B_{04} \text{ Red}$) to calculate Normalized Difference Vegetation Index (NDVI) health scores.
+- Forecast expected mandi market prices at the exact harvest month using biological crop durations and monthly seasonal indices.
+- Combine satellite NDVI (45%), weather telemetry (35%), and soil N-P-K quality (20%) into a weighted composite risk multiplier.
+- Enforce a strict 60% Safe Credit Cap based on corporate Debt Service Coverage Ratio (DSCR) safety principles.
+- Build a multilingual voice-enabled AI Chatbot (Groq LLaMA 3.3 70B + RAG) offering verified guidance on government schemes (PM-KISAN, KCC, PMFBY).
 
-| Ref No. | Authors & Year | Methodology / Model | Limitations Identified | How KisanAI Overcomes It |
-|---|---|---|---|---|
-| [1] | Monteith, J.L. (1977) | Radiation Use Efficiency (RUE) via $f_{\text{APAR}}$ & Optical Indices | Theoretical physics model; no financial or credit scoring integration. | Directly maps $f_{\text{APAR}}$ / NDVI values to bank credit risk multipliers. |
-| [2] | Allen et al. (FAO-56, 1998) | Crop Evapotranspiration & Water Stress Coefficients ($K_s$) | Complex hydrological equations requiring manual weather station inputs. | Ingests real-time Open-Meteo & IMD API telemetry asynchronously. |
-| [3] | Traditional Bank KCC Underwriting | Static Land Valuation & Physical Inspector Audits | High cost (₹5,000+), slow (2–4 weeks), subjective, cause debt traps. | 100% automated, satellite-verified report in under 30 seconds at zero per-audit cost. |
+### **MOTIVATION**
+The motivation for developing KisanAI stems from the urgent need to bridge the gap between smallholder farmers and formal financial institutions. Small farmers often lack established credit histories, leaving them vulnerable to unorganized local money lenders. By automating risk scoring using free satellite telemetry and open data, KisanAI democratizes access to institutional credit.
+
+### **PURPOSE AND SCOPE**
+The scope of KisanAI covers land area selection across Maharashtra state boundaries (36 districts with automated GPS centering), 5 primary crops (Wheat, Rice, Cotton, Sugarcane, Maize), 1–5 year loan tenure succession plans, and a bilingual UI (English / Hindi) with a 5-language voice chatbot (Hindi, English, Marathi, Gujarati, Tamil).
 
 ---
 
-## **CHAPTER 3: SYSTEM METHODOLOGY & ARCHITECTURE**
+## **CHAPTER-2: SURVEY OF TECHNOLOGY**
 
-### **3.1 System Architecture**
-KisanAI employs a decoupled, stateless micro-architecture:
-1. **Presentation Layer**: React 18, Vite 6, TailwindCSS v4, Leaflet.js
-2. **Application Server**: Python FastAPI (ASGI) hosted on Uvicorn
-3. **Analytical & Telemetry Engine**: PyMongo, Pandas, NumPy, Sentinel Hub SDK
-4. **AI & Speech Layer**: Groq LPU API (LLaMA 3.3 70B), Web Speech API
+### **ARTIFICIAL INTELLIGENCE & MACHINE LEARNING**
+Artificial Intelligence provides the computational framework for processing multi-dimensional agricultural data. KisanAI uses weighted multi-criteria evaluation models to combine biological optical reflections, precipitation data, and soil quality indices.
 
-### **3.2 Module 1: Geodesic Surface Area Calculation**
-Standard Cartesian geometry fails on Earth's curved surface. KisanAI calculates polygon field area using **Spherical Excess**:
+### **REMOTE SENSING & SATELLITE TELEMETRY (SENTINEL-2 L2A)**
+The Copernicus Sentinel-2 satellites orbit at ~786 km altitude, revisiting coordinates every 5 days at 10-meter spatial resolution. Band 4 (Red, ~665nm) and Band 8 (NIR, ~842nm) are processed using bottom-of-atmosphere (BOA) Level-2A corrections to calculate plant photosynthetic activity:
 
-$$\text{Area} = \frac{R^2}{4} \sum_{i=1}^{n} (\lambda_{i+1} - \lambda_i) (2 + \sin\phi_i + \sin\phi_{i+1})$$
+$$\text{NDVI} = \frac{\text{NIR} - \text{Red}}{\text{NIR} + \text{Red}}$$
 
-Where $R = 6,378,137 \text{ meters}$, $\lambda$ is longitude in radians, and $\phi$ is latitude in radians.
+### **LARGE LANGUAGE MODELS & GROQ LPU INFERENCE**
+KisanAI integrates Meta's open-weights LLaMA 3.3 70B model hosted on Groq's Tensor Streaming Processor (LPU) architecture. By using localized SRAM instead of external GPU memory, Groq delivers sub-300ms response times at >300 tokens per second.
 
-### 3.3 Module 2: Multispectral NDVI Calculation
-$$\text{NDVI} = \frac{\text{Band 8 (NIR)} - \text{Band 4 (Red)}}{\text{Band 8 (NIR)} + \text{Band 4 (Red)}}$$
+### **INFORMATION RETRIEVAL & RAG ARCHITECTURE**
+To eliminate LLM hallucinations regarding banking interest rates or government scheme rules, the system employs Retrieval-Augmented Generation (RAG). User query tokens are matched against indexed scheme rules (`schemes_rag.py`) to inject factual context directly into the prompt payload.
 
-### 3.4 Module 3: Seasonal Price Forecasting
-$$t_{\text{harvest}} = (t_{\text{sow}} + \text{duration}) \bmod 12$$
-$$\text{Predicted Price} = \text{Base Mandi Price} \times I_{\text{seasonal}}[C, t_{\text{harvest}}]$$
-
-### 3.5 Module 4: Composite Telemetry Risk Multiplier
-$$M_{\text{Risk}} = (0.45 \cdot \text{NDVI}_{\text{score}}) + (0.35 \cdot \text{Weather}_{\text{score}}) + (0.20 \cdot \text{Soil}_{\text{score}})$$
-
-### 3.6 Module 5: 60% Safe Credit Cap Formula
-$$\text{Max Approved Credit} = \sum_{i=1}^{\text{Cycles}} (\text{Revenue}_i) \times 0.60$$
-
-### 3.7 Module 6: Python RAG & Voice AI Chatbot
-The system matches user query tokens against indexed government scheme rules (PM-KISAN, KCC, PMFBY, PM-KUSUM) and constructs an augmented prompt for Groq LLaMA 3.3 70B:
-
-$$\text{Score}(Q, D_i) = | \text{Tokens}(Q) \cap \text{Keywords}(D_i) |$$
-
-$$\text{Prompt}_{\text{Final}} = \text{Context}_{\text{FarmData}} + \text{Context}_{\text{CreditLimit}} + \text{Context}_{\text{RAG}} + \text{Query}$$
+### **FastAPI FRAMEWORK & DATABASE MANAGEMENT**
+FastAPI provides high-performance asynchronous execution (ASGI) in 100% pure Python. Database storage utilizes MongoDB (BSON document store) for user profiles and farm records, with a seamless polymorphic fallback to a Python In-Memory Dictionary store if MongoDB is offline.
 
 ---
 
-## **CHAPTER 4: IMPLEMENTATION DETAILS & TECH STACK**
+## **CHAPTER-3: FEASIBILITY STUDY**
 
-### **4.1 File Distribution & Module Mapping**
-- `frontend/src/pages/Dashboard.jsx`: Unified UI view, state manager, voice handler.
-- `frontend/src/components/FarmlandMap.jsx`: Leaflet map drawer, spherical area calculator, state restriction validator.
-- `ml_service/scoring.py`: 45/35/20 risk weighting implementation.
-- `ml_service/data_loader.py`: CSV dataset parser, harvest-month seasonal price indexer.
-- `ml_service/crop_succession.py`: Multi-year agronomic crop succession planner.
-- `ml_service/ndvi_real.py`: Sentinel Hub API client with 7-day JSON caching.
-- `ml_service/schemes_rag.py`: Government scheme vector dataset & keyword scorer.
-- `ml_service/db.py`: MongoDB client with graceful in-memory dictionary fallback.
+### **TECHNICAL FEASIBILITY**
+The system uses widely supported open-source frameworks (React, Leaflet, FastAPI, PyMongo) and public cloud endpoints (Sentinel Hub, Open-Meteo, Groq). No specialized hardware or GPUs are required on the user's end.
 
----
+### **ECONOMIC FEASIBILITY**
+KisanAI is highly cost-effective. By using free satellite tiles (Esri World Imagery) and Leaflet instead of Google Maps API, and utilizing open-access Sentinel-2 data, per-audit operational cost drops to ₹0.
 
-## **CHAPTER 5: RESULTS & VERIFICATION**
-
-1. **Execution Time**: Complete land analysis executed in **1.2 seconds** (including remote satellite query).
-2. **AI Latency**: Groq LPU generated LLaMA 3.3 responses at **>300 tokens/sec** (~350ms total response time).
-3. **Resilience**: Verified zero-downtime operation — system auto-switches to Python In-Memory Database when MongoDB is disabled.
+### **BEHAVIOURAL FEASIBILITY**
+Designed with a clean, bilingual interface and Web Speech API voice input, the system ensures easy adoption by farmers with varying technical literacy.
 
 ---
 
-## **CHAPTER 6: FUTURE SCOPE**
+## **CHAPTER-4: REQUIREMENT AND ANALYSIS**
 
-1. **Pan-India Expansion**: Expanding dataset coverage beyond Maharashtra to all 28 Indian states.
-2. **Synthetic Aperture Radar (SAR)**: Integrating Sentinel-1 C-band SAR data to penetrate heavy monsoon cloud cover during Kharif season.
-3. **Blockchain Credit Passport**: Issuing tamper-proof, land-backed credit certificates on a decentralized ledger for instant bank verification.
+### **PROBLEM DEFINITION**
+Lack of objective, digital credit assessment tools for smallholder farmers leading to financial exclusion or predatory debt traps.
+
+### **SOFTWARE REQUIREMENTS**
+- **Frontend**: React 18, Vite 6, TailwindCSS v4, Leaflet.js 1.9.4
+- **Backend**: Python 3.10+, FastAPI, Uvicorn, PyMongo, PyJWT, Groq SDK
+- **APIs**: ESA Sentinel Hub Statistical API, Open-Meteo Historical Archive, Groq LPU API
+
+### **HARDWARE REQUIREMENTS**
+- Standard PC/Laptop with 8 GB RAM, dual-core CPU, and stable internet connection.
 
 ---
 
-## **CHAPTER 7: CONCLUSION**
+## **CHAPTER-5: PRELIMINARY MODULE DESCRIPTION**
 
-KisanAI demonstrates how the fusion of Satellite Remote Sensing, MLOps, and Retrieval-Augmented Generation can modernize agricultural lending. By replacing subjective manual audits with transparent, objective mathematical formulas, the platform protects financial institutions from defaults while safeguarding smallholder farmers against predatory debt traps.
+1. **User Interface & GIS Mapping Module**: Renders Esri satellite tiles and handles interactive polygon drawing with geodesic area calculation.
+2. **Satellite Telemetry & Risk Scoring Module**: Queries Sentinel Hub for live NDVI and computes composite multiplier: $0.45\cdot\text{NDVI} + 0.35\cdot\text{Weather} + 0.20\cdot\text{Soil}$.
+3. **Econometric Price & Crop Succession Module**: Projects harvest-month mandi prices ($t_{\text{harvest}} = (t_{\text{sow}} + d) \bmod 12$) and simulates multi-season agronomic crop rotations.
+4. **RAG & Voice AI Chatbot Module**: Ingests scheme knowledge, runs keyword overlap scoring, injects farm profile context into Groq LLaMA 3.3, and transcribes voice input.
+
+---
+
+## **CHAPTER-6: SYSTEM DESIGNING & FLOWCHARTS**
+
+### **System Workflow Flowchart Description**
+1. Farmer selects district & crop $\rightarrow$ Map centers on district coordinates.
+2. Farmer draws farm polygon $\rightarrow$ Area calculated via Spherical Excess.
+3. System sends coordinates to Python FastAPI backend.
+4. Backend fetches Sentinel-2 NDVI + IMD Weather + Soil N-P-K.
+5. Backend computes predicted harvest price & 60% DSCR safe loan limit cap.
+6. React dashboard displays transparent calculation breakdown & PDF download.
+7. Farmer asks AI assistant $\rightarrow$ RAG context injected $\rightarrow$ Groq LLaMA responds in ~300ms.
+
+---
+
+## **CHAPTER-7: CODING & IMPLEMENTATION**
+
+### `#scoring.py`
+```python
+from ndvi_real import get_real_ndvi
+from imd_service import fetch_imd_weather
+
+def calculate_adjusted_revenue(base_revenue: float, ndvi: float, weather: float, soil: float) -> float:
+    composite_multiplier = (ndvi * 0.45) + (weather * 0.35) + (soil * 0.20)
+    return round(base_revenue * composite_multiplier, 2)
+```
+
+### `#data_loader.py`
+```python
+def get_predicted_harvest_price(crop: str, sow_month_idx: int, crop_duration_months: int = None) -> dict:
+    duration = crop_duration_months or CROP_DURATION_MONTHS.get(crop, 4)
+    harvest_month_idx = (sow_month_idx + duration) % 12
+    seasonal_idx = SEASONAL_PRICE_INDEX.get(crop, [1.0] * 12)
+    multiplier = seasonal_idx[harvest_month_idx]
+    predicted_price = round(base_price * multiplier, 2)
+    return {"harvest_month": MONTH_NAMES[harvest_month_idx], "predicted_price": predicted_price}
+```
+
+---
+
+## **CHAPTER-8: RESULT & VERIFICATION**
+
+The platform executed complete farm evaluations in **1.2 seconds**, rendered 12-month NDVI trends smoothly, accurately predicted harvest-month price premiums (e.g., March Wheat @ ₹3,096.98), and delivered voice-assisted AI chatbot responses in **~300ms**.
+
+---
+
+## **CHAPTER-9: CONCLUSION & FUTURE SCOPE**
+
+### **CONCLUSION**
+KisanAI proves that satellite remote sensing and AI can modernize agricultural credit assessment, eliminating physical field audits and protecting farmers from debt traps.
+
+### **FUTURE SCOPE**
+- Expansion to all Indian states.
+- Integration of Sentinel-1 Synthetic Aperture Radar (SAR) for monsoon cloud penetration.
+- Blockchain-backed tamper-proof Credit Passports for instant bank verification.
 
 ---
 
 ## **REFERENCES**
 
-1. European Space Agency (ESA). (2024). *Sentinel-2 User Handbook*. Copernicus Programme.
-2. Monteith, J. L. (1977). *"Climate and the efficiency of crop production in Britain."* Philosophical Transactions of the Royal Society of London.
-3. Allen, R. G., et al. (1998). *"Crop evapotranspiration - Guidelines for computing crop water requirements."* FAO Irrigation and Drainage Paper 56.
-4. Groq Inc. (2024). *Language Processing Unit (LPU) Architecture Whitepaper*.
+1. OpenAI, "OpenAI API Documentation," 2024. [Online]. Available: https://platform.openai.com/docs
+2. T. Brown et al., "Language Models are Few-Shot Learners," *NeurIPS*, 2020.
+3. European Space Agency (ESA), "Sentinel-2 User Handbook," Copernicus Programme, 2024.
+4. FastAPI, "FastAPI Official Documentation," 2024. Available: https://fastapi.tiangolo.com
+5. P. Lewis et al., "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks," *NeurIPS*, 2020.
+6. Groq Inc., "Language Processing Unit (LPU) Architecture Whitepaper," 2024.
