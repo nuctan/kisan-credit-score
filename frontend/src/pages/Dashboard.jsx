@@ -590,15 +590,28 @@ const Dashboard = () => {
               className="flex-1 px-4 py-3 bg-white border border-[#E8630A]/20 rounded-xl text-sm focus:outline-none focus:border-[#E8630A]"
             />
 
-            {/* Voice Input Button */}
+            {/* Voice Input Button with getUserMedia Permission Prompt */}
             <button
               type="button"
-              onClick={() => {
+              onClick={async () => {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 if (!SpeechRecognition) {
-                  alert('आपके ब्राउज़र में स्पीच रिकॉग्निशन सपोर्ट नहीं है। कृपया Chrome/Edge का प्रयोग करें।');
+                  alert('आपके ब्राउज़र में स्पीच रिकॉग्निशन सपोर्ट नहीं है। कृपया Google Chrome का प्रयोग करें।');
                   return;
                 }
+
+                // Explicitly request microphone permission from browser first
+                try {
+                  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    // Stop stream immediately after permission granted
+                    stream.getTracks().forEach(track => track.stop());
+                  }
+                } catch (micErr) {
+                  alert('🎙️ माइक्रोफोन अनुमति अस्वीकृत: कृपया ब्राउज़र के यूआरएल बार में ताला (Lock / Site Settings) आइकॉन पर क्लिक करके माइक की अनुमति दें।');
+                  return;
+                }
+
                 const recognition = new SpeechRecognition();
                 const langCodes = { hi: 'hi-IN', en: 'en-US', mr: 'mr-IN', gu: 'gu-IN', ta: 'ta-IN' };
                 recognition.lang = langCodes[chatLang] || 'hi-IN';
@@ -606,14 +619,24 @@ const Dashboard = () => {
 
                 recognition.onstart = () => setIsListening(true);
                 recognition.onend = () => setIsListening(false);
-                recognition.onerror = () => setIsListening(false);
+                recognition.onerror = (e) => {
+                  console.warn('Speech recognition error:', e.error);
+                  setIsListening(false);
+                  if (e.error === 'not-allowed') {
+                    alert('🎙️ माइक्रोफोन अनुमति अस्वीकृत: कृपया ब्राउज़र की साइट सेटिंग्स में माइक को Allow करें।');
+                  }
+                };
 
                 recognition.onresult = (event) => {
                   const transcript = event.results[0][0].transcript;
                   setInput(prev => (prev ? prev + ' ' + transcript : transcript));
                 };
 
-                recognition.start();
+                try {
+                  recognition.start();
+                } catch (err) {
+                  console.warn('Recognition start error:', err);
+                }
               }}
               className={`p-3 rounded-xl border font-bold transition-all cursor-pointer flex items-center justify-center ${
                 isListening
