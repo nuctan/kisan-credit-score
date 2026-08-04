@@ -1,0 +1,11 @@
+fastapi==0.110.0
+uvicorn==0.28.0
+pymongo==4.6.2
+pyjwt==2.8.0
+groq==0.4.2
+pandas==2.2.1
+numpy==1.26.4
+requests==2.31.0
+python-dotenv==1.0.1
+sentinelhub==3.10.0
+python-dateutil==2.9.0
