@@ -45,9 +45,14 @@ const AUTO_CROP_DURATIONS = {
 const Dashboard = () => {
   const navigate = useNavigate();
 
-  // User auth state
-  const rawUser = localStorage.getItem('user');
-  const user = rawUser ? JSON.parse(rawUser) : null;
+  // User auth state with safe JSON parsing
+  let user = null;
+  try {
+    const rawUser = localStorage.getItem('user');
+    user = rawUser && rawUser !== 'undefined' ? JSON.parse(rawUser) : null;
+  } catch (e) {
+    user = null;
+  }
 
   // Form states for Land & Loan Selection (NO HARDCODED DEFAULT VALUES for new accounts)
   const [formState, setFormState] = useState({
