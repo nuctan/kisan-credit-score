@@ -19,7 +19,7 @@ const Login = () => {
     setLoading(true);
     
     try {
-      const API_URL = 'http://localhost:8000/api';
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
       // Backend expects { email, password } — sends username value in the email field
       // The backend supports login by both email or username via $or query
       const response = await axios.post(`${API_URL}/auth/login`, {
