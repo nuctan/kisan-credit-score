@@ -24,7 +24,7 @@ const Register = () => {
     setLoading(true);
     
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+      const API_URL = import.meta.env.VITE_API_URL || 'https://kisan-backend-wxsg.onrender.com/api';
       const response = await axios.post(`${API_URL}/auth/register`, {
         name: formData.fullName,
         email: formData.email,
@@ -40,7 +40,8 @@ const Register = () => {
         navigate('/login');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'रजिस्ट्रेशन विफल। कृपया बाद में प्रयास करें।');
+      const msg = err.response?.data?.detail || err.response?.data?.error || err.response?.data?.message || err.message || 'रजिस्ट्रेशन विफल। कृपया बाद में प्रयास करें।';
+      setError(msg);
     } finally {
       setLoading(false);
     }
