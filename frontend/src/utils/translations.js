@@ -1,6 +1,6 @@
 export const translations = {
   hi: {
-    title: 'किसानAI',
+    title: 'किसान',
     subtitle: 'Sentinel-2 मैप व बहु-वर्षीय ऋण चक्र फसल उत्तराधिकार प्रणाली',
     dashboardTab: '📊 डैशबोर्ड व नक्शा',
     chatTab: '💬 AI सहायक',
@@ -84,7 +84,7 @@ export const translations = {
     chatDisclaimer: 'किसानAI अनुमान गलत हो सकते हैं। वित्तीय निर्णय लेने से पहले सत्यापित करें।'
   },
   en: {
-    title: 'KrishiAI',
+    title: 'Kisan',
     subtitle: 'Sentinel-2 Satellite Map & Multi-Year Loan Cycle Crop Succession Platform',
     dashboardTab: '📊 Dashboard & Map',
     chatTab: '💬 AI Assistant',
@@ -162,10 +162,10 @@ export const translations = {
     expertTip: 'Agronomy Expert Advice:',
 
     // AI Chat Assistant
-    chatHeader: 'KrishiAI Assistant Chat',
-    chatPlaceholder: 'Type your message or click the mic button to speak...',
+    chatHeader: 'KisanAI Assistant Chat',
+    chatPlaceholder: 'Type your message or tap mic to speak...',
     chatSending: '🌾 AI is thinking...',
-    chatDisclaimer: 'KrishiAI estimates are projections. Verify before final financial decisions.'
+    chatDisclaimer: 'KisanAI estimates are projections. Verify before final financial decisions.'
   },
   mr: {
     title: 'किसानAI',

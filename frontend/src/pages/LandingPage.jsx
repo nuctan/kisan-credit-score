@@ -42,8 +42,8 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen bg-bg-light text-text-main flex flex-col font-sans">
       <header className="p-6 flex justify-between items-center bg-white shadow-sm">
-        <div className="text-3xl font-bold text-secondary">
-          {lang === 'hi' ? 'किसान' : 'Kisan'}<span className="text-primary">AI</span>
+        <div className="text-3xl font-bold">
+          <span className="text-primary">{lang === 'hi' ? 'किसान' : 'Kisan'}</span><span className="text-secondary">AI</span>
         </div>
         <div className="flex items-center gap-3">
           {/* Language Toggle */}

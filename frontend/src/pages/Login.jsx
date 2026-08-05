@@ -7,6 +7,7 @@ const Login = () => {
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [lang, setLang] = useState('hi');
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -17,21 +18,19 @@ const Login = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    
+
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'https://kisan-backend-wxsg.onrender.com/api';
-      // Backend expects { email, password } — sends username value in the email field
-      // The backend supports login by both email or username via $or query
       const response = await axios.post(`${API_URL}/auth/login`, {
         email: formData.username,
         password: formData.password,
       });
       localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data)); // backend returns user at root, not response.data.user
+      localStorage.setItem('user', JSON.stringify(response.data));
       navigate('/dashboard');
     } catch (err) {
-      // FastAPI returns errors in `detail` field
-      const errMsg = err.response?.data?.detail || err.response?.data?.message || err.message || 'लॉग इन विफल। कृपया अपने विवरण की जांच करें।';
+      const errMsg = err.response?.data?.detail || err.response?.data?.message || err.message ||
+        (lang === 'en' ? 'Login failed. Please check your credentials.' : 'लॉग इन विफल। कृपया अपने विवरण की जांच करें।');
       setError(errMsg);
       console.error('Login error:', err.response?.data || err.message);
     } finally {
@@ -41,50 +40,63 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-bg-light flex flex-col font-sans">
-      <header className="p-6 bg-white shadow-sm">
-        <Link to="/" className="text-3xl font-bold text-secondary inline-block">
-          किसान<span className="text-primary">AI</span>
+      <header className="p-6 bg-white shadow-sm flex items-center justify-between">
+        <Link to="/" className="text-3xl font-bold inline-block">
+          <span className="text-primary">{lang === 'hi' ? 'किसान' : 'Kisan'}</span>
+          <span className="text-secondary">AI</span>
         </Link>
+        <button
+          onClick={() => setLang(l => (l === 'hi' ? 'en' : 'hi'))}
+          className="px-4 py-2 border-2 border-secondary text-secondary hover:bg-secondary hover:text-white rounded-xl text-sm font-bold transition-all shadow-sm flex items-center gap-2"
+        >
+          <span>🌐</span> {lang === 'hi' ? 'English' : 'हिंदी'}
+        </button>
       </header>
 
       <main className="flex-grow flex items-center justify-center p-4">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border-t-8 border-primary"
         >
-          <h2 className="text-3xl font-bold text-center text-secondary mb-8">लॉग इन करें</h2>
-          
+          <h2 className="text-3xl font-bold text-center text-secondary mb-8">
+            {lang === 'en' ? 'Sign In' : 'लॉग इन करें'}
+          </h2>
+
           {error && (
-            <div className="bg-red-100 text-red-700 p-4 rounded-lg mb-6 font-medium">
+            <div className="bg-red-100 text-red-700 p-4 rounded-lg mb-6 font-medium text-sm">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-lg font-semibold text-text-main mb-2">उपयोगकर्ता नाम या ईमेल</label>
+              <label className="block text-base font-semibold text-text-main mb-2">
+                {lang === 'en' ? 'Username or Email' : 'उपयोगकर्ता नाम या ईमेल'}
+              </label>
               <input
                 type="text"
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-lg"
-                placeholder="अपना उपयोगकर्ता नाम दर्ज करें"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-base"
+                placeholder={lang === 'en' ? 'Enter username or email' : 'अपना उपयोगकर्ता नाम दर्ज करें'}
               />
             </div>
 
             <div>
-              <label className="block text-lg font-semibold text-text-main mb-2">पासवर्ड</label>
+              <label className="block text-base font-semibold text-text-main mb-2">
+                {lang === 'en' ? 'Password' : 'पासवर्ड'}
+              </label>
               <input
                 type="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-lg"
-                placeholder="अपना पासवर्ड दर्ज करें"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-base"
+                placeholder={lang === 'en' ? 'Enter password' : 'अपना पासवर्ड दर्ज करें'}
               />
             </div>
 
@@ -93,14 +105,18 @@ const Login = () => {
               disabled={loading}
               className={`w-full py-4 text-xl font-bold text-white bg-primary rounded-xl shadow-md hover:bg-orange-700 transition-colors ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
-              {loading ? 'कृपया प्रतीक्षा करें...' : 'लॉग इन करें'}
+              {loading
+                ? (lang === 'en' ? 'Please wait...' : 'कृपया प्रतीक्षा करें...')
+                : (lang === 'en' ? 'Sign In' : 'लॉग इन करें')}
             </button>
           </form>
 
-          <div className="mt-8 text-center text-lg">
-            <span className="text-gray-600">खाता नहीं है? </span>
+          <div className="mt-8 text-center text-base">
+            <span className="text-gray-600">
+              {lang === 'en' ? "Don't have an account? " : 'खाता नहीं है? '}
+            </span>
             <Link to="/register" className="text-secondary font-bold hover:text-primary transition-colors">
-              रजिस्टर करें
+              {lang === 'en' ? 'Register Now' : 'रजिस्टर करें'}
             </Link>
           </div>
         </motion.div>
