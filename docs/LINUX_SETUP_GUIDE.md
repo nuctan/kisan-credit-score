@@ -41,7 +41,7 @@ cd kisaanai/ml_service
 cat << 'EOF' > .env
 SENTINELHUB_CLIENT_ID=4fc6b83b-9859-4e80-a479-de24edfec4a4
 SENTINELHUB_CLIENT_SECRET=zcVICUW7Dqu8bEV5zWzMHmrFWUKChqFN
-GROQ_API_KEY=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
+GROQ_API_KEY=your_groq_api_key_here
 JWT_SECRET=krishiai_secret_key_super_secure_2024
 MONGO_URI=mongodb://127.0.0.1:27017/kisaanai
 EOF
