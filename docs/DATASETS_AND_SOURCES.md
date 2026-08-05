@@ -53,3 +53,4 @@ IMD & Open-Meteo Weather ───────────► imd_service.py ─
                              
 Schemes Knowledge Base ─────────────► schemes_rag.py ───► main.py (/api/ai/chat) ──► Groq LLaMA 3.3 70B
 ```
+
