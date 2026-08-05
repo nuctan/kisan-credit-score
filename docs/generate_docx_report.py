@@ -3,8 +3,6 @@ from docx import Document
 from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT
-from docx.oxml import parse_xml, OxmlElement
-from docx.oxml.ns import nsdecls, qn
 
 doc = Document()
 
@@ -34,7 +32,7 @@ def add_page_break():
     doc.add_page_break()
 
 # ─────────────────────────────────────────────────────────────
-# 1. FRONT COVER PAGE (Exact Template Requested)
+# 1. FRONT COVER PAGE (With Generated KisanAI Logo)
 # ─────────────────────────────────────────────────────────────
 p_top = doc.add_paragraph()
 p_top.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -43,36 +41,43 @@ run_top.font.size = Pt(16)
 run_top.font.bold = True
 run_top.font.color.rgb = DARK_TEXT
 
+# Insert Logo Image on First Page
+logo_path = "/home/nuctan/.gemini/antigravity/brain/9335bacb-17e7-4d99-ab47-51d2cb71486f/kisaan_ai_logo_1785937155823.jpg"
+if os.path.exists(logo_path):
+    p_img = doc.add_paragraph()
+    p_img.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_img.paragraph_format.space_after = Pt(10)
+    p_img.add_run().add_picture(logo_path, width=Inches(2.2))
+
 p_title = doc.add_paragraph()
 p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
 run_title = p_title.add_run("KisanAI – An AI-Powered Satellite Telemetry & Kisan Credit Assessment Platform")
-run_title.font.size = Pt(22)
+run_title.font.size = Pt(20)
 run_title.font.bold = True
 run_title.font.color.rgb = FOREST_GREEN
 
 p_sub = doc.add_paragraph()
 p_sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
-p_sub.paragraph_format.space_after = Pt(30)
-run_sub = p_sub.add_run("\nSubmitted In Partial Fulfilment of the Requirement for the Award of Degree / Certificate\n")
-run_sub.font.size = Pt(13)
+p_sub.paragraph_format.space_after = Pt(20)
+run_sub = p_sub.add_run("Submitted In Partial Fulfilment of the Requirement for the Award of Degree / Certificate\n")
+run_sub.font.size = Pt(12)
 run_sub.font.italic = True
 
-# Box for Students
 p_by = doc.add_paragraph()
 p_by.alignment = WD_ALIGN_PARAGRAPH.CENTER
 r_by = p_by.add_run("SUBMITTED BY:\n")
 r_by.font.bold = True
-r_by.font.size = Pt(14)
+r_by.font.size = Pt(13)
 
 p_names = doc.add_paragraph()
 p_names.alignment = WD_ALIGN_PARAGRAPH.CENTER
 r_names = p_names.add_run("Tanishq Kanthed (Nuctan)\nAkshat Srivastava\nRadhika Yadav\n\n")
-r_names.font.size = Pt(14)
+r_names.font.size = Pt(13)
 r_names.font.bold = True
 r_names.font.color.rgb = SAFFRON
 
 # Blank Box for Guide (As Requested)
-table_guide = doc.add_table(rows=2, cols=2)
+table_guide = doc.add_table(rows=1, cols=2)
 table_guide.alignment = WD_TABLE_ALIGNMENT.CENTER
 cell_l = table_guide.cell(0, 0)
 cell_r = table_guide.cell(0, 1)
@@ -82,10 +87,10 @@ cell_r.text = "HEAD OF DEPARTMENT:\n\n_______________________\n(HOD Signature & 
 
 p_foot = doc.add_paragraph()
 p_foot.alignment = WD_ALIGN_PARAGRAPH.CENTER
-p_foot.paragraph_format.space_before = Pt(40)
+p_foot.paragraph_format.space_before = Pt(30)
 r_foot = p_foot.add_run("DEPARTMENT OF COMPUTER SCIENCE & ENGINEERING\n2025–2026")
 r_foot.font.bold = True
-r_foot.font.size = Pt(13)
+r_foot.font.size = Pt(12)
 
 add_page_break()
 
@@ -93,7 +98,7 @@ add_page_break()
 # 2. CERTIFICATE (Blank Space for Guide Signature)
 # ─────────────────────────────────────────────────────────────
 p = doc.add_paragraph()
-run = p.add_run("CERTIFICATE")
+p.add_run("CERTIFICATE")
 add_header_style(p, 20, FOREST_GREEN)
 
 p_cert = doc.add_paragraph(
@@ -445,6 +450,9 @@ doc.add_paragraph(
     "[5] AGMARKNET, \"Agricultural Marketing Information Network Portal\", Directorate of Marketing & Inspection (DMI), Govt of India, 2024."
 )
 
+# Save both .docx and .doc extensions
 output_docx = "/home/nuctan/Desktop/kisaanai/docs/PROJECT_REPORT.docx"
+output_doc = "/home/nuctan/Desktop/kisaanai/docs/PROJECT_REPORT.doc"
 doc.save(output_docx)
-print(f"Docx Report generated successfully at {output_docx}")
+doc.save(output_doc)
+print(f"Docx & Doc Reports generated successfully at {output_docx} and {output_doc}")
