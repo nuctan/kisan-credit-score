@@ -227,10 +227,16 @@ The platform executed complete farm evaluations in **1.2 seconds**, rendered 12-
 ### **CONCLUSION**
 KisanAI proves that satellite remote sensing and AI can modernize agricultural credit assessment, eliminating physical field audits and protecting farmers from debt traps.
 
-### **FUTURE SCOPE**
-- Expansion to all Indian states.
-- Integration of Sentinel-1 Synthetic Aperture Radar (SAR) for monsoon cloud penetration.
-- Blockchain-backed tamper-proof Credit Passports for instant bank verification.
+### **FUTURE SCOPE & ARCHITECTURAL EVOLUTION**
+
+Our current architecture provides a solid foundation, but there are several key technical improvements planned for future production evolution:
+
+1. **Semantic Vector Embedding RAG**: Replace keyword/token-matching RAG with dense semantic retrieval using text embeddings (e.g. BGE-M3 / OpenAI embeddings) stored in a vector database (ChromaDB / Qdrant) to understand complex user intent.
+2. **Real-Time Stream Integration**: Integrate continuously updated, live agricultural streaming telemetry and market prices instead of relying primarily on historical datasets.
+3. **Multi-Spectral Indexing (EVI & NDWI)**: Enhance remote sensing by combining NDVI with Additional Vegetation Indices such as Enhanced Vegetation Index (EVI) to overcome canopy saturation, and Normalized Difference Water Index (NDWI) using SWIR bands for plant canopy moisture and drought stress assessment.
+4. **End-to-End Supervised ML Risk Model**: Replace manually weighted risk scores with a fully supervised machine learning model (e.g. XGBoost Regressor) trained directly on historical agricultural loan default outcomes.
+5. **Model Explainability & Interpretability (SHAP / LIME)**: Improve explainability by showing feature importance graphs displaying exact factors influencing each loan recommendation.
+6. **Enterprise Kubernetes Deployment & Monitoring**: Deploy the system using a production-grade Kubernetes cluster with Redis caching and Prometheus/Grafana monitoring to support large-scale enterprise bank throughput.
 
 ---
 

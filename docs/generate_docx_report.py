@@ -427,10 +427,20 @@ add_header_style(p, 22, FOREST_GREEN)
 doc.add_paragraph(
     "10.1 CONCLUSION\n"
     "KisanAI successfully automates agricultural credit risk underwriting in under 30 seconds. By combining Sentinel-2 remote sensing, Scikit-Learn price forecasting, and 60% DSCR safe credit limits, the platform eliminates physical audit expenses while protecting farmers against debt traps.\n\n"
-    "10.2 FUTURE SCOPE\n"
-    "1. Pan-India Dataset Expansion across all 28 states.\n"
-    "2. Sentinel-1 Synthetic Aperture Radar (SAR) integration to penetrate heavy monsoon clouds.\n"
-    "3. Blockchain Credit Passport NFTs for instant bank API verification."
+    "10.2 FUTURE SCOPE & ARCHITECTURAL EVOLUTION\n"
+    "Our current architecture provides a solid foundation, but there are several major technical improvements planned for future production scaling:\n\n"
+    "1. Vector Embedding RAG Upgrade:\n"
+    "   Replace the current keyword/token-matching search with dense semantic retrieval using high-dimensional text embeddings (e.g. BGE-M3 / OpenAI text-embedding-3-small) stored in a dedicated vector database (ChromaDB / Qdrant) to understand complex farmer query intent.\n\n"
+    "2. Real-Time Stream Integration:\n"
+    "   Integrate continuously updated, live agricultural streaming data and daily wholesale market prices rather than relying primarily on static historical baseline datasets.\n\n"
+    "3. Multi-Spectral Indexing Expansion (EVI & NDWI):\n"
+    "   Enhance the remote sensing component by combining NDVI with additional vegetation indices such as Enhanced Vegetation Index (EVI) to overcome canopy saturation, and Normalized Difference Water Index (NDWI) using SWIR bands for plant canopy moisture and drought stress assessment.\n\n"
+    "4. End-to-End Supervised ML Risk Model:\n"
+    "   Replace the manually weighted risk score (AHP matrix) with a fully supervised machine learning model (e.g. XGBoost / Gradient Boosting Regressor) trained directly on historical agricultural loan default outcomes.\n\n"
+    "5. Model Explainability & Local Interpretability (SHAP / LIME):\n"
+    "   Improve explainability by displaying SHAP (SHapley Additive exPlanations) visual feature importance graphs showing exact percentage factors influencing each loan recommendation.\n\n"
+    "6. Enterprise Kubernetes Deployment & Monitoring:\n"
+    "   Deploy the platform on a production-grade Kubernetes (K8s) cluster with Redis distributed caching and Prometheus + Grafana monitoring metrics to support large-scale enterprise bank throughput."
 )
 
 add_page_break()
