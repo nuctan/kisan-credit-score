@@ -3,6 +3,6 @@ AI-powered agricultural credit scoring using satellite NDVI, weather, soil data,
 
 ## Team
 - Tanishq Kanthed (Lead Developer)
-- Akshat Srivastava (ML & Backend)
-- Radhika Yadav (Frontend & UI)
+- Akshat Srivastava (Lead Devloper)
+- Radhika Yadav (Lead Devloper)
 
